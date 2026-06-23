@@ -1,0 +1,27 @@
+\chapter{LLM Query Rewriting}
+
+\section{Motivation}
+Student queries often use informal, incomplete, or conversational language. Official documents often use formal, administrative, and domain-specific terminology. Even when the student's intent is clear to a human, it may not be expressed in a way that BM25 can match well.
+
+This motivates the use of a low-cost LLM as a query-rewriting layer. The model is not asked to answer the question. It is asked to produce a better search query.
+
+\section{Rewrite Task}
+The rewrite component receives a user message and outputs a concise search-oriented query. The rewritten query should preserve the user's intent, avoid unsupported assumptions, and prefer terminology likely to appear in official institutional documents.
+
+\section{Rewrite Constraints}
+The final instruction profile should enforce the following constraints:
+
+\begin{itemize}
+    \item preserve the original information need;
+    \item do not answer the question;
+    \item do not invent missing course names, years, procedures, or requirements;
+    \item output a concise search query suitable for BM25;
+    \item keep the language consistent with the likely source corpus;
+    \item retain relevant official keywords when useful.
+\end{itemize}
+
+\section{Why Not Only Heuristics?}
+Some query improvements could be handled with deterministic rules, such as lowercasing, removing punctuation, or expanding simple word variants. However, many mismatches are semantic rather than only syntactic. The same student intent can be expressed with many informal formulations, while the official wording may use administrative concepts that are not obvious to a student.
+
+The thesis therefore tests whether a low-cost LLM can provide a practical middle ground: cheaper and simpler than a full agentic system, but more flexible than hand-written rewrite rules.
+\par

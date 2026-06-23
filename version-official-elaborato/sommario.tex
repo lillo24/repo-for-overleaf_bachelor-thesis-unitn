@@ -1,0 +1,18 @@
+\chapter*{Summary}
+\label{sommario}
+\addcontentsline{toc}{chapter}{Summary}
+
+University bureaucratic information is often distributed across official web pages, PDF regulations, programme pages, forms, and yearly documents. Students express their information needs in informal natural language, while institutional sources often use formal administrative terminology. This mismatch can reduce the effectiveness of keyword-based retrieval systems such as BM25.
+
+This thesis investigates whether a low-cost Large Language Model (LLM) can be used as a lightweight semantic query-rewriting layer to improve BM25 retrieval over official UniTN bureaucratic sources. The work starts from a broader product-oriented prototype for a university bureaucracy assistant, but the thesis isolates a narrower and measurable research question:
+
+\begin{quote}
+\textbf{Does LLM query rewriting improve BM25 retrieval of official UniTN bureaucratic sources?}
+\end{quote}
+
+The proposed architecture keeps BM25 as the deterministic retrieval backbone. The LLM is not primarily evaluated as an answer generator. Instead, it is used before retrieval, as a semantic adapter that rewrites informal student questions into search-oriented queries. The main comparison is therefore between two retrieval conditions: BM25 over the original student query and BM25 over the LLM-rewritten query.
+
+Retrieval quality is evaluated through manual relevance judgements and ranking metrics such as Success@1, Success@5, and Mean Reciprocal Rank (MRR). The expected contribution is an empirical analysis of when query rewriting helps, when it hurts, and which retrieval failures remain due to missing sources, ambiguity, source granularity, or outdated documents.
+
+The broader system includes source acquisition, manifest/versioning, HTML/PDF extraction, BM25 indexing, a backend service, a frontend interface, and debugging tools. These components provide the product context, while the scientific core of the thesis remains the retrieval experiment.
+\par

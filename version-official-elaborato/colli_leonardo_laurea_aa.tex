@@ -1,0 +1,94 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% Template per Elaborato di Laurea
+% DISI - Dipartimento di Ingegneria e Scienza dell'Informazione
+%
+% Basis adapted for thesis:
+% Does LLM query rewriting improve BM25 retrieval of official UniTN bureaucratic sources?
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass[epsfig,a4paper,11pt,titlepage,twoside,openany]{book}
+
+% Layout required by the DISI template: A4, Times-like 11pt, single spacing.
+\usepackage[paperheight=29.7cm,paperwidth=21cm,outer=1.5cm,inner=2.5cm,top=2cm,bottom=2cm]{geometry}
+\usepackage{setspace}
+\singlespacing
+
+% Encoding and language.
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{times}
+
+% Useful packages.
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{titlesec}
+\usepackage[hidelinks]{hyperref}
+
+\setlength{\parskip}{0.35em}
+\setlength{\parindent}{0pt}
+\setlist[itemize]{leftmargin=1.25em, itemsep=0.15em}
+\setlist[enumerate]{leftmargin=1.25em, itemsep=0.15em}
+
+% ------------------------------------------------------------------
+
+\newcommand{\ThesisTitle}{Improving BM25 Retrieval over Official University Bureaucracy Sources}
+\newcommand{\ThesisSubtitle}{Low-Cost LLM Query Rewriting for Official UniTN Documents}
+\newcommand{\StudentName}{Leonardo Colli}
+\newcommand{\SupervisorName}{Prof. Marco Roveri}
+\newcommand{\DegreeCourse}{Informatica}
+\newcommand{\AcademicYear}{2025/2026}
+
+\begin{document}
+
+  \pagenumbering{gobble}
+  \input{pagina_iniziale}
+  \clearpage
+
+  % Optional. Leave empty or remove if not needed.
+  \input{ringraziamenti}
+  \clearpage
+
+  \pagestyle{plain}
+  \mainmatter
+
+  \tableofcontents
+  \clearpage
+
+  \begingroup
+    \renewcommand{\cleardoublepage}{}
+    \renewcommand{\clearpage}{}
+
+    \titleformat{\chapter}
+      {\normalfont\Huge\bfseries}{\thechapter}{1em}{}
+
+    \titlespacing*{\chapter}{0pt}{0.59in}{0.02in}
+    \titlespacing*{\section}{0pt}{0.20in}{0.02in}
+    \titlespacing*{\subsection}{0pt}{0.10in}{0.02in}
+
+    \input{sommario}
+    \input{capitolo1}
+    \input{capitolo2}
+    \input{capitolo3}
+    \input{capitolo4}
+    \input{capitolo5}
+    \input{capitolo6}
+    \input{capitolo7}
+
+  \endgroup
+
+  \addcontentsline{toc}{chapter}{Bibliography}
+  \bibliographystyle{plain}
+  \bibliography{biblio}
+
+  % Optional appendix. Currently empty.
+  \appendix
+  \input{allegati}
+
+\end{document}

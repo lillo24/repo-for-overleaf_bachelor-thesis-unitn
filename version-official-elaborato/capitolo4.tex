@@ -1,0 +1,42 @@
+\chapter{Extraction, Indexing, and Retrieval}
+
+\section{Extraction}
+Raw sources are transformed into searchable text units. HTML pages are extracted into anchored section or subsection segments. PDF documents are extracted into page-level segments. Each segment keeps provenance metadata so that search results can be traced back to an official source.
+
+For HTML, extraction can follow a fallback strategy: first using UniTN-specific layout cues, then generic heading-based segmentation, and finally a flat fallback when structure is limited. For PDFs, page-level extraction is used as a simple and robust baseline.
+
+\section{Searchable Unit}
+The searchable unit is one extracted segment. For HTML sources, this usually corresponds to a section or subsection. For PDF sources, it corresponds to one page. This choice keeps retrieval results small enough to inspect and cite, while preserving a direct connection to the source.
+
+Each segment stores metadata such as:
+
+\begin{itemize}
+    \item source URL;
+    \item document identifier;
+    \item revision identifier;
+    \item anchor type, such as HTML or PDF;
+    \item anchor value, such as heading or page number;
+    \item segment order;
+    \item title and body text.
+\end{itemize}
+
+\section{BM25 Indexing}
+Each extracted segment is materialized as a BM25 record and indexed in OpenSearch. The ranking setup uses light field weighting: title fields are weighted more than headings, and headings are weighted more than body text. This reflects the intuition that matches in titles and headings are usually more informative than isolated matches in long body segments.
+
+A post-processing step may reduce near-duplicate yearly PDF families. When multiple versions of a similar yearly document appear in the first results, the system keeps one representative result, preferring the latest year when scores are similar.
+
+\section{Experimental Retrieval Pipeline}
+The experimental comparison is shown in Figure~\ref{fig:pipeline}.
+
+\begin{figure}[h]
+\centering
+\fbox{\begin{minipage}{0.90\linewidth}
+\centering
+Raw sources $\rightarrow$ manifest/versioning $\rightarrow$ HTML/PDF extraction $\rightarrow$ BM25 index\\[0.6em]
+Original query $\rightarrow$ BM25 $\rightarrow$ top-$k$ results\\
+Original query $\rightarrow$ LLM rewrite $\rightarrow$ BM25 $\rightarrow$ top-$k$ results
+\end{minipage}}
+\caption{Simplified architecture and experimental comparison.}
+\label{fig:pipeline}
+\end{figure}
+\par
