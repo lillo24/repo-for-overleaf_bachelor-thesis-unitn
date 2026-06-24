@@ -1,20 +1,12 @@
 \chapter{Introduction}
-
-\section{Problem Context}
-University students frequently need to answer practical bureaucratic questions: how to change a study plan, how to apply for graduation, how internships work,  TODOwhich deadlines apply, which forms are required, and which rules apply to a specific degree programme. The relevant information is usually official, but not always easy to find. It can be scattered across institutional pages, PDF regulations, yearly documents, programme pages, and administrative forms.
-
-This creates a practical risk. If students cannot locate the correct official source, they may rely on generic search engines, outdated documents, peers, or consumer AI systems. General-purpose AI tools may provide fluent answers, but they do not necessarily retrieve from current official university sources. For bureaucratic information, fluency is not enough: the answer must be grounded in the correct source.
-
 \section{Motivation}
-Retrieval-Augmented Generation (RAG) systems are often proposed as a way to reduce hallucination by grounding answers in retrieved documents \cite{lewis2020retrieval}. However, a RAG system depends strongly on the quality of its retrieved context. If the retriever does not find the correct source, even a strong language model may produce an incomplete or wrong answer.
-
-Preliminary development of the broader prototype suggested that, when relevant source segments were retrieved, modern LLMs could usually reformulate bureaucratic content into understandable answers. This observation shifted the focus toward the retrieval and context-selection problem: before asking whether the model can write a good answer, the system must find the right official context.
+Preliminary development of the broader prototype (RAG generator) suggested that, when relevant source segments were retrieved, modern LLMs could usually reformulate bureaucratic content into understandable answers. This observation shifted the focus toward the retrieval and context-selection problem: before asking whether the model can write a good answer, can the system  find the right official context reliably?
 
 \section{Research Question}
-The thesis studies the following research question:
+The thesis explores the application of a LLM, as a thin cheap layer to reinforce a hard-coded retrieval algorithm. 
 
 \begin{quote}
-\textbf{Does LLM query rewriting improve BM25 retrieval of official UniTN bureaucratic sources?}
+\textbf{Does LLM query rewriting improve meaningfully BM25 retrieval (on bureaucratic sources)?}
 \end{quote}
 
 The experiment compares two retrieval settings:
@@ -26,7 +18,6 @@ The experiment compares two retrieval settings:
 
 \section{Contribution}
 The thesis contributes:
-
 \begin{itemize}
     \item a controlled corpus of official UniTN bureaucratic sources;
     \item an extraction and indexing pipeline for HTML and PDF documents;

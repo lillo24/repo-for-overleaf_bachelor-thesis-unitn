@@ -1,27 +1,66 @@
-\chapter{LLM Query Rewriting}
 
-\section{Motivation}
-Student queries often use informal, incomplete, or conversational language. Official documents often use formal, administrative, and domain-specific terminology. Even when the student's intent is clear to a human, it may not be expressed in a way that BM25 can match well.
+\chapter{Conclusions and Future Work}
 
-This motivates the use of a low-cost LLM as a query-rewriting layer. The model is not asked to answer the question. It is asked to produce a better search query.
+\section{Experimental Results}
+The main retrieval results will compare the BM25 baseline against the LLM-rewritten query condition. The table will be filled after running the final evaluation.
 
-\section{Rewrite Task}
-The rewrite component receives a user message and outputs a concise search-oriented query. The rewritten query should preserve the user's intent, avoid unsupported assumptions, and prefer terminology likely to appear in official institutional documents.
+\begin{table}[h]
+\centering
+\begin{tabular}{lccc}
+\toprule
+\textbf{Condition} & \textbf{Success@1} & \textbf{Success@5} & \textbf{MRR} \\
+\midrule
+BM25 original query & TODO & TODO & TODO \\
+BM25 rewritten query & TODO & TODO & TODO \\
+\bottomrule
+\end{tabular}
+\caption{Retrieval performance comparison.}
+\label{tab:results-main}
+\end{table}
 
-\section{Rewrite Constraints}
-The final instruction profile should enforce the following constraints:
+The expected interpretation is not only whether query rewriting improves the average scores, but also in which classes of queries it helps. The most relevant cases are those where the student query is understandable to a human but lexically distant from the terminology used in official sources.
+
+\section{Discussion and Error Analysis}
+The error analysis should explain why query rewriting helps or fails. Possible failure classes include:
 
 \begin{itemize}
-    \item preserve the original information need;
-    \item do not answer the question;
-    \item do not invent missing course names, years, procedures, or requirements;
-    \item output a concise search query suitable for BM25;
-    \item keep the language consistent with the likely source corpus;
-    \item retain relevant official keywords when useful.
+    \item \textbf{Missing source}: the correct official source is not in the indexed corpus;
+    \item \textbf{Bad source granularity}: the document is indexed, but the relevant information is hidden in a long segment or split across segments;
+    \item \textbf{Ambiguous query}: the question is course-specific but does not specify the degree programme;
+    \item \textbf{Rewrite drift}: the LLM changes the original intent or adds unsupported assumptions;
+    \item \textbf{Lexical mismatch remains}: the rewritten query still does not match the official wording;
+    \item \textbf{Duplicate yearly documents}: old and new versions compete in the ranking;
+    \item \textbf{Right retrieval, wrong downstream answer}: relevant mainly for the broader product prototype, not for the core retrieval experiment.
 \end{itemize}
 
-\section{Why Not Only Heuristics?}
-Some query improvements could be handled with deterministic rules, such as lowercasing, removing punctuation, or expanding simple word variants. However, many mismatches are semantic rather than only syntactic. The same student intent can be expressed with many informal formulations, while the official wording may use administrative concepts that are not obvious to a student.
+This analysis is important because the goal of the thesis is not simply to report a single score. The goal is to understand whether a lightweight LLM layer can improve a deterministic retrieval pipeline, and under which conditions this design is useful.
 
-The thesis therefore tests whether a low-cost LLM can provide a practical middle ground: cheaper and simpler than a full agentic system, but more flexible than hand-written rewrite rules.
-\par
+\section{Product Context}
+This thesis is extracted from a broader product-oriented prototype for a university bureaucracy assistant. The broader system includes controlled source acquisition, manifest/versioning, HTML/PDF extraction, BM25 indexing, a backend service, a frontend interface, and debugging tools for inspecting acquisition and extraction.
+
+The product-oriented goal is to support students and administrative staff by providing a trustworthy interface over official university sources. However, the thesis isolates one measurable component: whether LLM query rewriting improves retrieval quality.
+
+\section{Limitations}
+The current thesis focuses on retrieval rather than full answer generation. This keeps the experiment measurable, but it does not fully evaluate chatbot behavior. Citation correctness, refusal behavior, answer faithfulness, and user satisfaction are therefore outside the core evaluation unless added as secondary analysis.
+
+Another limitation is source coverage. If the correct document is missing from the corpus, query rewriting cannot solve the problem. In such cases, the limitation belongs to acquisition and corpus completeness, not only to retrieval.
+
+Finally, query rewriting itself can introduce errors. A rewritten query may be lexically stronger while semantically drifting from the original student intent. This is why manual relevance judgement and error analysis remain necessary.
+
+\section{Conclusions}
+This thesis evaluates whether a low-cost LLM can improve deterministic retrieval by rewriting informal student queries into better BM25 search queries. The broader motivation is that, in institutional question answering, answer fluency is not sufficient: correctness depends on retrieving the right official context.
+
+The central contribution is therefore not a generic chatbot, but an empirical study of a lightweight AI layer that may improve a hard-coded retrieval pipeline while preserving inspectability and provenance.
+
+\section{Future Work}
+Future work may include:
+
+\begin{itemize}
+    \item hybrid retrieval combining BM25 and vector search;
+    \item reranking retrieved results;
+    \item structured databases for hard constraints such as ECTS requirements;
+    \item stronger citation and refusal evaluation for generated answers;
+    \item broader source acquisition across additional university domains;
+    \item user studies with students and administrative staff;
+    \item full assistant evaluation including answer correctness and faithfulness.
+\end{itemize}

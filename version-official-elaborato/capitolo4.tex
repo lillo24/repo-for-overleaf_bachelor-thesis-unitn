@@ -1,42 +1,126 @@
-\chapter{Extraction, Indexing, and Retrieval}
+\chapter{LLM Query Rewriting and Evaluation Methodology}
 
-\section{Extraction}
-Raw sources are transformed into searchable text units. HTML pages are extracted into anchored section or subsection segments. PDF documents are extracted into page-level segments. Each segment keeps provenance metadata so that search results can be traced back to an official source.
+\section{Motivation}
+Student queries often use informal, incomplete, or conversational language. Official university documents, on the other hand, usually use formal, administrative, and domain-specific terminology. Even when the student's intent is clear to a human reader, the same query may not contain the lexical signals needed by a BM25 retrieval system.
 
-For HTML, extraction can follow a fallback strategy: first using UniTN-specific layout cues, then generic heading-based segmentation, and finally a flat fallback when structure is limited. For PDFs, page-level extraction is used as a simple and robust baseline.
+This motivates the use of a low-cost LLM as a query-rewriting layer. In this thesis, the model is not used as the main answer generator in the evaluated experiment. Instead, it is used as a lightweight semantic adapter between the student's natural-language request and the deterministic BM25 search engine.
 
-\section{Searchable Unit}
-The searchable unit is one extracted segment. For HTML sources, this usually corresponds to a section or subsection. For PDF sources, it corresponds to one page. This choice keeps retrieval results small enough to inspect and cite, while preserving a direct connection to the source.
+\section{Rewrite Task/Prompt}
+The rewrite component receives a user message and produces a concise search-oriented query. The output should preserve the original information need while reformulating it with terms that are more likely to appear in official UniTN sources.
 
-Each segment stores metadata such as:
+The task can be summarized as follows:
+
+\begin{center}
+\fbox{\begin{minipage}{0.88\linewidth}
+\centering
+Student query $\rightarrow$ LLM query rewrite $\rightarrow$ BM25 search query
+\end{minipage}}
+\end{center}
+
+The rewritten query is then submitted to the same BM25 index used by the baseline system. This makes the comparison focused: the retrieval backend remains fixed, while only the query formulation changes.
+
+\section{Rewrite Constraints}
+The rewrite instruction should enforce the following constraints:
 
 \begin{itemize}
-    \item source URL;
-    \item document identifier;
-    \item revision identifier;
-    \item anchor type, such as HTML or PDF;
-    \item anchor value, such as heading or page number;
-    \item segment order;
-    \item title and body text.
+    \item preserve the original information need;
+    \item do not answer the question;
+    \item do not invent missing course names, academic years, procedures, or requirements;
+    \item output a concise search query suitable for BM25 retrieval;
+    \item prefer terminology likely to appear in official institutional documents;
+    \item keep the language consistent with the likely source corpus;
+    \item retain specific official keywords when they are already present and useful.
 \end{itemize}
 
-\section{BM25 Indexing}
-Each extracted segment is materialized as a BM25 record and indexed in OpenSearch. The ranking setup uses light field weighting: title fields are weighted more than headings, and headings are weighted more than body text. This reflects the intuition that matches in titles and headings are usually more informative than isolated matches in long body segments.
+These constraints are important because query rewriting can also introduce errors. If the model changes the student's intent or adds assumptions, retrieval may improve lexically while becoming semantically wrong.
 
-A post-processing step may reduce near-duplicate yearly PDF families. When multiple versions of a similar yearly document appear in the first results, the system keeps one representative result, preferring the latest year when scores are similar.
+\section{Why Not Only Heuristics?}
+Some query improvements can be handled with deterministic rules, such as lowercasing, removing punctuation, or expanding simple word variants. However, many mismatches are semantic rather than only syntactic. The same student intent can be expressed in many informal ways, while the official wording may use administrative concepts that are not obvious to a student.
 
-\section{Experimental Retrieval Pipeline}
-The experimental comparison is shown in Figure~\ref{fig:pipeline}.
+For example, a student may ask whether a grade can be removed from the academic record, while official documents may use terms such as \emph{rinuncia}, \emph{annullamento}, \emph{carriera}, or \emph{verbalizzazione}. A purely heuristic approach would require manually encoding many of these mappings. The thesis therefore tests whether a low-cost LLM can provide a practical middle ground: cheaper and simpler than a full agentic system, but more flexible than hand-written rewrite rules.
 
-\begin{figure}[h]
+\section{Experimental Setup}
+The experiment compares two retrieval conditions over the same indexed corpus:
+
+\begin{enumerate}
+    \item \textbf{Baseline}: BM25 search using the original student query;
+    \item \textbf{Rewrite}: BM25 search using the LLM-rewritten query.
+\end{enumerate}
+
+The comparison is retrieval-focused. The goal is not to evaluate whether the LLM can generate a fluent answer, but whether query rewriting improves the probability that the correct official source appears in the first retrieved results.
+
+\begin{table}[h]
 \centering
-\fbox{\begin{minipage}{0.90\linewidth}
+\begin{tabular}{lll}
+\toprule
+\textbf{Condition} & \textbf{Input to BM25} & \textbf{Purpose} \\
+\midrule
+Baseline & Original query & Measure raw BM25 performance \\
+Rewrite & LLM-rewritten query & Measure the effect of semantic rewriting \\
+\bottomrule
+\end{tabular}
+\caption{Experimental retrieval conditions.}
+\label{tab:experimental-conditions}
+\end{table}
+
+\section{Evaluation Dataset}
+The evaluation uses a set of realistic student-style queries about UniTN bureaucracy. Queries should cover different categories, such as study plans, graduation, internships, Erasmus, taxes, exam procedures, and course-specific rules.
+
+For each query, the top-$k$ results are collected under both experimental conditions. The results are then manually judged for relevance.
+
+\section{Manual Relevance Judgement}
+Retrieved results are manually labelled according to their usefulness for answering the query. A simple three-level scale is used.
+
+\begin{table}[h]
 \centering
-Raw sources $\rightarrow$ manifest/versioning $\rightarrow$ HTML/PDF extraction $\rightarrow$ BM25 index\\[0.6em]
-Original query $\rightarrow$ BM25 $\rightarrow$ top-$k$ results\\
-Original query $\rightarrow$ LLM rewrite $\rightarrow$ BM25 $\rightarrow$ top-$k$ results
-\end{minipage}}
-\caption{Simplified architecture and experimental comparison.}
-\label{fig:pipeline}
-\end{figure}
-\par
+\begin{tabular}{clp{0.58\linewidth}}
+\toprule
+\textbf{Label} & \textbf{Name} & \textbf{Meaning} \\
+\midrule
+2 & Relevant & The result is an official source that directly answers the query. \\
+1 & Partially relevant & The result is related but incomplete, ambiguous, or only indirectly useful. \\
+0 & Not relevant & The result does not answer the query or is unrelated. \\
+\bottomrule
+\end{tabular}
+\caption{Manual relevance scale.}
+\label{tab:relevance-scale}
+\end{table}
+
+The primary metrics treat label 2 as relevant. A secondary analysis can also report results when labels 1 and 2 are both treated as useful.
+
+\section{Retrieval Metrics}
+
+\subsection{Success@1}
+Success@1 measures whether the first retrieved result is relevant:
+
+\begin{equation}
+Success@1(q) =
+\begin{cases}
+1, & \text{if the result at rank 1 is relevant} \\
+0, & \text{otherwise.}
+\end{cases}
+\end{equation}
+
+This metric is useful because users often inspect the first result first.
+
+\subsection{Success@5}
+Success@5 measures whether at least one relevant result appears in the first five results:
+
+\begin{equation}
+Success@5(q) =
+\begin{cases}
+1, & \text{if any result at ranks 1--5 is relevant} \\
+0, & \text{otherwise.}
+\end{cases}
+\end{equation}
+
+This metric is useful because the interface can show multiple candidates and the system may still be useful if the correct source appears within the first page of results.
+
+\subsection{Mean Reciprocal Rank}
+Mean Reciprocal Rank (MRR) rewards systems that place the first relevant result higher in the ranking:
+
+\begin{equation}
+MRR = \frac{1}{|Q|} \sum_{q \in Q} \frac{1}{rank_q}
+\end{equation}
+
+where $rank_q$ is the rank position of the first relevant result for query $q$. If no relevant result is found, the reciprocal rank is defined as 0.

@@ -1,19 +1,14 @@
-\chapter{Background and Related Work}
+\chapter{Useful Terminology}
 
 \section{BM25 and Lexical Retrieval}
 BM25 is a ranking function widely used in information retrieval. It scores documents using lexical matching, term frequency, inverse document frequency, and document length normalization. Its advantages are simplicity, low cost, determinism, and interpretability. These properties make it attractive for institutional settings where systems should be inspectable and reproducible.
 
 Its limitation is that it depends on lexical overlap between the query and the indexed text. This is important for bureaucracy: a student may ask a question using everyday language, while the official document may use administrative wording. For example, a student-style question may talk about ``removing an exam'', while the official source may use terms related to formal registration, verbalization, study plan rules, or administrative procedures.
 
-\section{Retrieval-Augmented Generation}
+\section{RAG: Retrieval-Augmented Generation}
 RAG combines a retriever and a generator. The retriever selects relevant information from an external corpus, and the generator uses this retrieved context to answer the user \cite{lewis2020retrieval}. This architecture is useful when the desired answer depends on changing or domain-specific knowledge.
 
 In this thesis, RAG is mainly the motivation. The core experiment does not evaluate answer generation. Instead, it isolates the retrieval step, because retrieved context is a necessary condition for grounded answers.
-
-\section{University-Oriented RAG Systems}
-Recent work has explored RAG systems for academic guidance and university information. Uni-Mate presents a RAG system for prospective students, using university course and library information and evaluating generated answers through both automatic and human assessment \cite{mazzei2025unimate}. Unipa-GPT studies university-oriented QA in Italian, including corpus construction, RAG architectures, prompt design, model comparison, and answer evaluation \cite{siragusa2024unipagpt,siragusa2025phd}.
-
-Compared with these works, this thesis is narrower. It does not try to evaluate a complete chatbot as the main contribution. Instead, it studies whether a cheap LLM can improve the input to a deterministic BM25 retriever through query rewriting.
 
 \section{LLM Query Rewriting}
 Query rewriting reformulates a user query before retrieval. The goal is not to answer the question, but to express the information need in a form that is more useful for the retriever. In this thesis, the LLM acts as a semantic adapter between informal human language and institutional terminology.

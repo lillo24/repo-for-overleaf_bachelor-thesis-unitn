@@ -1,6 +1,8 @@
-\chapter{Dataset and Source Acquisition}
+\chapter{Dataset, Source Acquisition, and Retrieval Pipeline}
 
-\section{Source Scope}
+This chapter describes how official UniTN sources are collected, stored, transformed into searchable units, and indexed for retrieval. These steps provide the controlled document base used in the experimental comparison between standard BM25 retrieval and BM25 retrieval supported by LLM-based query rewriting.
+
+\section{Source Repository}
 The dataset consists of official UniTN sources related to student bureaucracy. The collection is restricted to trusted institutional sources. This restriction is important because the system is intended to retrieve official information, not general web content.
 
 Sources may include:
@@ -12,24 +14,35 @@ Sources may include:
     \item pages related to study plans, internships, graduation, Erasmus, taxes, and student administration.
 \end{itemize}
 
-\section{Controlled Acquisition}
-The broader product prototype includes a controlled source acquisition pipeline. The acquisition component starts from trusted seed pages or hubs and follows links only when they satisfy configured scope rules. This is not intended as unconstrained web crawling. The goal is to collect official sources while keeping the process auditable and tunable.
+The scope is intentionally limited. The goal is not to crawl the entire public web, but to build a reliable and inspectable corpus of institutional material from which retrieval results can be traced back to official sources.
 
-Each fetched document is associated with metadata such as requested URL, final URL after redirects, canonical URL, status code, content type, content length, and fetch timestamp. Failed fetches are logged rather than silently ignored.
+\section{Extraction}
+!!! To add that PDFs are divided in sections instead of just in pages, as kinda HTML, this is an improvement that I wanted to do anyway.
+!!!
 
-\section{Manifest and Versioning}
-The source repository uses a manifest to track documents and revisions. Each document is associated with a stable identifier, and a new revision is stored only when the content changes. This is useful because official university documents can be updated, replaced, or preserved across different academic years.
 
-Typical metadata fields include:
+Raw sources are transformed into searchable text units. HTML pages are extracted into anchored section or subsection segments. PDF documents are extracted into page-level segments. Each segment keeps provenance metadata so that search results can be traced back to an official source.
+
+For HTML, extraction can follow a fallback strategy: first using UniTN-specific layout cues, then generic heading-based segmentation, and finally a flat fallback when structure is limited. For PDFs, page-level extraction is used as a simple and robust baseline.
+
+The extraction stage is important because retrieval over entire pages or entire PDFs would often return large and hard-to-inspect results. Segment-level extraction instead allows the system to retrieve smaller textual units that are easier to evaluate and cite.
+
+\section{Searchable Unit}
+The searchable unit is one extracted segment. For HTML sources, this usually corresponds to a section or subsection. For PDF sources, it corresponds to one page. This choice keeps retrieval results small enough to inspect and cite, while preserving a direct connection to the source.
+
+Each segment stores metadata such as:
 
 \begin{itemize}
-    \item \texttt{doc\_id}: stable identifier derived from the canonical URL;
-    \item \texttt{revision\_id}: document-scoped revision identifier;
-    \item canonical URL;
-    \item content type;
-    \item fetch timestamp;
-    \item current-revision marker.
+    \item source URL;
+    \item document identifier;
+    \item revision identifier;
+    \item anchor type, such as HTML or PDF;
+    \item anchor value, such as heading or page number;
+    \item segment order;
+    \item title and body text.
 \end{itemize}
+
+This representation is also useful for manual relevance judgments, because the evaluator can inspect the exact segment returned by the system instead of judging only the whole document.
 
 \section{Dataset Statistics}
 The final dataset statistics will be filled after the final crawl and extraction run.
@@ -50,4 +63,28 @@ Evaluation queries & TODO & Student-style bureaucracy queries \\
 \caption{Dataset overview.}
 \label{tab:dataset-overview}
 \end{table}
+
+\section{BM25 Indexing}
+Each extracted segment is materialized as a BM25 record and indexed in OpenSearch. The ranking setup uses light field weighting: title fields are weighted more than headings, and headings are weighted more than body text. This reflects the intuition that matches in titles and headings are usually more informative than isolated matches in long body segments.
+
+A post-processing step may reduce near-duplicate yearly PDF families. When multiple versions of a similar yearly document appear in the first results, the system keeps one representative result, preferring the latest year when scores are similar.
+
+In this thesis, BM25 is kept as the deterministic retrieval backbone. The purpose is not to replace it with a generative model, but to test whether a low-cost LLM can improve the query formulation that is given to BM25.
+
+\section{Experimental Retrieval Pipeline}
+The experimental comparison is shown in Figure~\ref{fig:pipeline}. The same indexed corpus is queried in two conditions: first with the original student-style query, and then with a rewritten query produced by an LLM. The comparison isolates the effect of query rewriting while keeping the source corpus, extraction strategy, and BM25 index unchanged.
+
+\begin{figure}[h]
+\centering
+\fbox{\begin{minipage}{0.90\linewidth}
+\centering
+Raw sources $\rightarrow$ manifest/versioning $\rightarrow$ HTML/PDF extraction $\rightarrow$ BM25 index\\[0.6em]
+Original query $\rightarrow$ BM25 $\rightarrow$ top-$k$ results\\
+Original query $\rightarrow$ LLM rewrite $\rightarrow$ BM25 $\rightarrow$ top-$k$ results
+\end{minipage}}
+\caption{Simplified architecture and experimental comparison.}
+\label{fig:pipeline}
+\end{figure}
+
+This pipeline separates the retrieval problem from the later answer-generation problem. In the broader product prototype, retrieved segments can be passed to a generative model to produce a grounded answer with citations. In the thesis evaluation, however, the main object of measurement is whether the correct official source is retrieved in the top results.
 \par

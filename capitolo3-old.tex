@@ -1,0 +1,53 @@
+\chapter{Dataset and Source Acquisition}
+
+\section{Source Scope}
+The dataset consists of official UniTN sources related to student bureaucracy. The collection is restricted to trusted institutional sources. This restriction is important because the system is intended to retrieve official information, not general web content.
+
+Sources may include:
+
+\begin{itemize}
+    \item institutional web pages;
+    \item degree and programme pages;
+    \item regulations and yearly documents in PDF format;
+    \item pages related to study plans, internships, graduation, Erasmus, taxes, and student administration.
+\end{itemize}
+
+\section{Controlled Acquisition}
+The broader product prototype includes a controlled source acquisition pipeline. The acquisition component starts from trusted seed pages or hubs and follows links only when they satisfy configured scope rules. This is not intended as unconstrained web crawling. The goal is to collect official sources while keeping the process auditable and tunable.
+
+Each fetched document is associated with metadata such as requested URL, final URL after redirects, canonical URL, status code, content type, content length, and fetch timestamp. Failed fetches are logged rather than silently ignored.
+
+\section{Manifest and Versioning}
+The source repository uses a manifest to track documents and revisions. Each document is associated with a stable identifier, and a new revision is stored only when the content changes. This is useful because official university documents can be updated, replaced, or preserved across different academic years.
+
+Typical metadata fields include:
+
+\begin{itemize}
+    \item \texttt{doc\_id}: stable identifier derived from the canonical URL;
+    \item \texttt{revision\_id}: document-scoped revision identifier;
+    \item canonical URL;
+    \item content type;
+    \item fetch timestamp;
+    \item current-revision marker.
+\end{itemize}
+
+\section{Dataset Statistics}
+The final dataset statistics will be filled after the final crawl and extraction run.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lrl}
+\toprule
+\textbf{Item} & \textbf{Count} & \textbf{Notes} \\
+\midrule
+HTML documents & TODO & Official UniTN pages \\
+PDF documents & TODO & Official UniTN PDFs \\
+Extracted segments & TODO & HTML sections and PDF pages \\
+Indexed BM25 records & TODO & One record per searchable segment \\
+Evaluation queries & TODO & Student-style bureaucracy queries \\
+\bottomrule
+\end{tabular}
+\caption{Dataset overview.}
+\label{tab:dataset-overview}
+\end{table}
+\par
