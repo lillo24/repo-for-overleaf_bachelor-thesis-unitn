@@ -1,11 +1,10 @@
 \chapter{LLM Query Rewriting and Evaluation Methodology}
 
-\section{Motivation}
 Student queries often use informal, incomplete, or conversational language. Official university documents, on the other hand, usually use formal, administrative, and domain-specific terminology. Even when the student's intent is clear to a human reader, the same query may not contain the lexical signals needed by a BM25 retrieval system.
 
 This motivates the use of a low-cost LLM as a query-rewriting layer. In this thesis, the model is not used as the main answer generator in the evaluated experiment. Instead, it is used as a lightweight semantic adapter between the student's natural-language request and the deterministic BM25 search engine.
 
-\section{Rewrite Task/Prompt}
+\section{Rewrite Task}
 The rewrite component receives a user message and produces a concise search-oriented query. The output should preserve the original information need while reformulating it with terms that are more likely to appear in official UniTN sources.
 
 The task can be summarized as follows:
@@ -19,8 +18,54 @@ Student query $\rightarrow$ LLM query rewrite $\rightarrow$ BM25 search query
 
 The rewritten query is then submitted to the same BM25 index used by the baseline system. This makes the comparison focused: the retrieval backend remains fixed, while only the query formulation changes.
 
-\section{Rewrite Constraints}
-The rewrite instruction should enforce the following constraints:
+\section{Rewrite Prompt/Instructions}
+The rewrite instruction is this one:
+
+\begin{quote}
+\small
+\begin{Verbatim}[
+    breaklines=true,
+    breakanywhere=true,
+    fontsize=\small,
+    xleftmargin=1.2cm,
+    frame=none
+]
+# Task
+Rewrite the university student's question into one concise lexical search query for document retrieval with BM25.
+
+# Requirements
+- Return one best rewritten query only
+
+- Do not answer the question; preserve the student's underlying information need and reshape the wording for retrieval.
+- Keep the rewritten query concise, keyword-dense, and lexical, avoiding unnecessary filler or explanation.
+- Prefer terms that are useful for searching official university pages and regulation PDFs, especially using Italian bureaucratic wording when the input is in Italian.
+- Prefer document-content terms likely to appear in titles, headings, or body text.
+
+- Write the rewritten query in the language specified by the `rewrite_language` input field.
+
+- Do not invent facts, dates, etc.
+- Do not add generic corpus/source labels such as "UniTN", "Universita di Trento", "university", or "ateneo"
+- Do not add course or programme names to the rewritten query unless the student explicitly wrote that name in the question.
+
+
+# Testing
+- Return a brief ambiguity note separately only if the question is meaningfully ambiguous, otherwise set `ambiguity_hint` to null.
+- Do not raise an ambiguity hint if the academic year is missing.
+
+
+# Examples
+- User: "Cosa succede se vado fuori corso?"
+  Good rewritten_query: "fuori corso conseguenze regolamento studenti carriera universitaria"
+  Bad rewritten_query: "conseguenze andare fuori corso UniTN cosa succede fuori corso regolamento"
+
+- User: "Come cambio il piano di studi?"
+  Good rewritten_query: "modifica piano di studi scadenze modulo Esse3"
+  Bad rewritten_query: "modifica piano di studi UniTN"
+\end{Verbatim}
+\end{quote}
+
+
+It enforces the following constraints:
 
 \begin{itemize}
     \item preserve the original information need;
@@ -28,26 +73,20 @@ The rewrite instruction should enforce the following constraints:
     \item do not invent missing course names, academic years, procedures, or requirements;
     \item output a concise search query suitable for BM25 retrieval;
     \item prefer terminology likely to appear in official institutional documents;
-    \item keep the language consistent with the likely source corpus;
     \item retain specific official keywords when they are already present and useful.
 \end{itemize}
 
 These constraints are important because query rewriting can also introduce errors. If the model changes the student's intent or adds assumptions, retrieval may improve lexically while becoming semantically wrong.
 
-\section{Why Not Only Heuristics?}
+\section{Why Heuristics are Worse?}
 Some query improvements can be handled with deterministic rules, such as lowercasing, removing punctuation, or expanding simple word variants. However, many mismatches are semantic rather than only syntactic. The same student intent can be expressed in many informal ways, while the official wording may use administrative concepts that are not obvious to a student.
 
 For example, a student may ask whether a grade can be removed from the academic record, while official documents may use terms such as \emph{rinuncia}, \emph{annullamento}, \emph{carriera}, or \emph{verbalizzazione}. A purely heuristic approach would require manually encoding many of these mappings. The thesis therefore tests whether a low-cost LLM can provide a practical middle ground: cheaper and simpler than a full agentic system, but more flexible than hand-written rewrite rules.
 
-\section{Experimental Setup}
-The experiment compares two retrieval conditions over the same indexed corpus:
 
-\begin{enumerate}
-    \item \textbf{Baseline}: BM25 search using the original student query;
-    \item \textbf{Rewrite}: BM25 search using the LLM-rewritten query.
-\end{enumerate}
 
-The comparison is retrieval-focused. The goal is not to evaluate whether the LLM can generate a fluent answer, but whether query rewriting improves the probability that the correct official source appears in the first retrieved results.
+\section{Manual Relevance Judgement}
+
 
 \begin{table}[h]
 \centering
@@ -63,12 +102,7 @@ Rewrite & LLM-rewritten query & Measure the effect of semantic rewriting \\
 \label{tab:experimental-conditions}
 \end{table}
 
-\section{Evaluation Dataset}
-The evaluation uses a set of realistic student-style queries about UniTN bureaucracy. Queries should cover different categories, such as study plans, graduation, internships, Erasmus, taxes, exam procedures, and course-specific rules.
 
-For each query, the top-$k$ results are collected under both experimental conditions. The results are then manually judged for relevance.
-
-\section{Manual Relevance Judgement}
 Retrieved results are manually labelled according to their usefulness for answering the query. A simple three-level scale is used.
 
 \begin{table}[h]
