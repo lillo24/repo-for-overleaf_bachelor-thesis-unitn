@@ -47,6 +47,22 @@ Another limitation is source coverage. If the correct document is missing from t
 
 Finally, query rewriting itself can introduce errors. A rewritten query may be lexically stronger while semantically drifting from the original student intent. This is why manual relevance judgement and error analysis remain necessary.
 
+\section{TODO / INTEGRATE: Italian Stemmed and Analyzed Fallback Field}
+A possible improvement, not included in the current experiment, is to add an Italian stemmed or analyzed fallback field to the BM25 index. This would be applied to both experimental conditions: the original-query baseline and the LLM-rewritten query condition.
+
+The motivation is that some retrieval failures may be caused by small morphological differences rather than by a deeper semantic mismatch. For example, a query term may appear in one form in the rewritten query and in another form in the official source, such as singular/plural or masculine/feminine variants. In these cases, changing the rewrite prompt is probably the wrong fix, because it risks hard-coding domain-specific terms and adding noise. A better retrieval-side improvement would be to search both exact fields and Italian-analyzed fields, while keeping exact title, heading, and body fields boosted.
+
+This would create a useful future comparison:
+
+\begin{itemize}
+    \item BM25 with exact fields only;
+    \item BM25 with exact fields plus Italian stemmed/analyzed fallback;
+    \item BM25 with LLM query rewriting over exact fields;
+    \item BM25 with LLM query rewriting over exact fields plus Italian stemmed/analyzed fallback.
+\end{itemize}
+
+This distinction matters because query rewriting and linguistic analysis solve different parts of the retrieval problem. Query rewriting tries to bridge the student's informal intent with institutional wording. Stemming or linguistic analysis instead improves robustness to surface-form variation inside the same language.
+
 \section{Conclusions}
 This thesis evaluates whether a low-cost LLM can improve deterministic retrieval by rewriting informal student queries into better BM25 search queries. The broader motivation is that, in institutional question answering, answer fluency is not sufficient: correctness depends on retrieving the right official context.
 
@@ -56,6 +72,7 @@ The central contribution is therefore not a generic chatbot, but an empirical st
 Future work may include:
 
 \begin{itemize}
+    \item adding an Italian stemmed or analyzed fallback field while keeping exact fields boosted;
     \item hybrid retrieval combining BM25 and vector search;
     \item reranking retrieved results;
     \item structured databases for hard constraints such as ECTS requirements;
