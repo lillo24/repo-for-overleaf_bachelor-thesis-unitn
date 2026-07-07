@@ -20,6 +20,29 @@ BM25 rewritten query & TODO & TODO & TODO \\
 
 The expected interpretation is not only whether query rewriting improves the average scores, but also in which classes of queries it helps. The most relevant cases are those where the student query is understandable to a human but lexically distant from the terminology used in official sources.
 
+\section{TODO / INTEGRATE: Rewrite Stability Across Repeated Runs}
+This is a good stability result. The rewrite is not perfectly deterministic, but the variation is small enough to be acceptable.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lccc}
+\toprule
+\textbf{Condition} & \textbf{Hit@1} & \textbf{Hit@3} & \textbf{MRR} \\
+\midrule
+Frozen rewrite, strict & 38.5--46.2\% & 76.9--84.6\% & 0.551--0.609 \\
+Frozen rewrite, lenient & 65.4--69.2\% & 80.8--92.3\% & 0.718--0.801 \\
+\bottomrule
+\end{tabular}
+\caption{Observed range across repeated runs with the same rewrite instruction.}
+\label{tab:rewrite-stability}
+\end{table}
+
+Because the dataset is small, one case corresponds to approximately 3.8 percentage points, so most changes represent only one to three cases moving around in the ranking.
+
+The important thesis-level conclusion is that, across repeated runs with the same rewrite instruction, frozen rewriting consistently outperformed the original-query baseline by a large margin, although individual ranks varied slightly.
+
+These three runs should be used as evidence of directional robustness, not as evidence that the exact metric values are perfectly stable. The safest reporting strategy is either to report the average over the three runs or to state that repeated runs remained in the same performance band.
+
 \section{Discussion and Error Analysis}
 The error analysis should explain why query rewriting helps or fails. Possible failure classes include:
 
