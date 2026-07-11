@@ -1,14 +1,127 @@
-% Requires in the main preamble:
-% \usepackage[most]{tcolorbox}
-%
-% Suggested placement in capitolo5.tex:
-% after the quantitative results and before the stability/discussion sections.
-%
-% Include with:
-% \input{qualitative_case_analysis}
-
 \section{Qualitative Case Analysis of Retrieval Improvements}
 \label{sec:qualitative-case-analysis}
 
-Aggregate retrieval metrics show whether query rewriting improves ranking quality overall,
-but they do not explain \emph{how} the
+Aggregate retrieval metrics show whether query rewriting improves ranking quality overall, but they do not explain \emph{how} the improvement occurs. This section examines four representative cases in which the rewritten query changed the retrieved evidence in a meaningful way.
+
+Across these examples, the rewrite performed two complementary operations. First, it reduced generic conversational structure while preserving the student's information need. Second, it added a small number of terms more likely to appear in official university documents. The resulting query remained lexical and suitable for BM25; the LLM was not asked to answer the question.
+
+\newtcolorbox{failurebox}{enhanced,breakable,colback=black!1,colframe=black!45,boxrule=0.3pt,leftrule=1.4mm,arc=0.8mm,left=2mm,right=2mm,top=1mm,bottom=1mm,title=\textbf{What went wrong in the baseline},fonttitle=\small,coltitle=black}
+
+\newtcolorbox{effectbox}{enhanced,breakable,colback=black!4,colframe=black!70,boxrule=0.3pt,leftrule=1.4mm,arc=0.8mm,left=2mm,right=2mm,top=1mm,bottom=1mm,title=\textbf{What the rewrite changed},fonttitle=\small,coltitle=black}
+
+\subsection{Overview}
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{p{0.19\linewidth}p{0.31\linewidth}p{0.39\linewidth}}
+\toprule
+\textbf{Case} & \textbf{Baseline behavior} & \textbf{Rewritten behavior} \\
+\midrule
+Study-plan deadlines & Three unrelated results in the top three & Study-plan procedure page at rank 1 and regulation at rank 2 \\
+Internship host & First two results were unrelated Opera FAQs & Internship-related result at rank 1 and expected DISI guidelines at rank 2 \\
+Language-certificate recognition & No relevant result in the top three & Three relevant CLA results, with the expected page at rank 1 \\
+Scholarship requirements & Partial FAQs and one irrelevant privacy result & Complete requirements section entered the top three \\
+\bottomrule
+\end{tabular}
+\caption{Summary of representative retrieval improvements.}
+\label{tab:qualitative-case-summary}
+\end{table}
+
+\subsection{Study-Plan Deadlines}
+
+\textbf{Original query:} \emph{Quali sono le scadenze per la presentazione o la modifica del piano di studi?}
+
+\textbf{Rewrite augmentation:} \emph{termini compilazione piano di studio Esse3 periodo inserimento modifiche}
+
+\begin{failurebox}
+The original top three consisted of unrelated pages about scholarships, housing, and privacy. The strongest misleading overlap came from a scholarship FAQ heading with the same generic structure:
+
+\begin{quote}
+\emph{Quali sono le} soglie di condizione economica \emph{per la presentazione} della domanda di benefici?
+\end{quote}
+
+BM25 rewarded the shared bureaucratic phrasing even though the page was unrelated to study plans. Terms such as \emph{scadenze}, \emph{presentazione}, and \emph{modifica} were also too generic to identify the intended workflow by themselves.
+\end{failurebox}
+
+\begin{effectbox}
+The rewrite introduced terms used by actual study-plan pages: \emph{compilazione}, \emph{Esse3}, \emph{periodo}, \emph{inserimento}, and \emph{modifiche}. The rewritten query retrieved a study-plan procedure page at rank 1 and the relevant regulation at rank 2. Relevant passages included \emph{compilare il piano di studio in Esse3}, \emph{periodo di compilazione}, and references to forms submitted outside the permitted deadlines.
+\end{effectbox}
+
+The improvement came from specializing the generic concept of a deadline toward the concrete study-plan workflow. A rule-based system would require a dedicated expansion dictionary for this meaning of \emph{scadenza}, distinct from scholarships, enrollment, housing, thesis submission, and exams.
+
+\subsection{Finding an Internship Host}
+
+\textbf{Original query:} \emph{Come posso trovare un'azienda o un ente disponibile per un tirocinio?}
+
+\textbf{Rewrite augmentation:} \emph{ricerca strutture ospitanti elenco aziende convenzioni tirocini}
+
+\begin{failurebox}
+The first two baseline results were unrelated Opera FAQs. One matched \emph{posso trovare}, while another matched \emph{come posso}. For example:
+
+\begin{quote}
+Dove \emph{posso trovare} la certificazione dell'importo di borsa di studio?
+\end{quote}
+
+The lexical overlap was strong, but it did not represent the student's information need.
+\end{failurebox}
+
+\begin{effectbox}
+The rewrite mapped \emph{azienda o ente disponibile} to the institutional concept of a \emph{struttura} or \emph{soggetto ospitante}. The expected DISI internship guidelines reached rank 2 and included:
+
+\begin{quote}
+L'Ufficio Job Guidance offre allo studente supporto anche nella fase di \emph{individuazione e contatto con il soggetto ospitante}.
+\end{quote}
+\end{effectbox}
+
+The rewrite therefore acted as a lexical translator between student wording and administrative wording. This is a semantic adaptation, not only stemming or normalization.
+
+\subsection{Language-Certificate Recognition}
+
+\textbf{Original query:} \emph{Posso usare un certificato per i corsi d'inglese aggiunti a Libretto, come il B2 o C1?}
+
+\textbf{Rewrite augmentation:} \emph{riconoscimento certificazioni linguistiche Libretto esami idoneità livello}
+
+\begin{failurebox}
+The baseline retrieved no relevant result in the top three. The first result was an unrelated TopSport page, with overlap driven mostly by generic words. The other two results mentioned English levels or C1 in course manifests, but not the recognition of an external certificate for university credits.
+\end{failurebox}
+
+\begin{effectbox}
+The augmentation introduced the exact institutional frame \emph{riconoscimento certificazioni linguistiche}. The expected CLA page moved to rank 1, and all three rewritten results were relevant. The rank-1 heading was:
+
+\begin{quote}
+\emph{Riconoscimento certificazioni linguistiche}
+\end{quote}
+\end{effectbox}
+
+This is the clearest example of the rewrite supplying a missing administrative concept. A human infers that using a B2 or C1 certificate for courses in the academic record refers to recognition of language certifications; BM25 cannot infer that relation unless the relevant vocabulary appears in the query.
+
+\subsection{Scholarship Requirements}
+
+\textbf{Original query:} \emph{Quali sono i requisiti per accedere alle borse di Opera?}
+
+\textbf{Focused augmentation:} \emph{requisiti richiesti idoneità merito benefici}
+
+\begin{failurebox}
+The original query retrieved partially useful Opera FAQs, but not the complete requirements section. One irrelevant privacy FAQ also entered the ranking through generic question syntax such as \emph{quali sono i}.
+
+A broader augmentation previously added \emph{domanda}, \emph{bando}, \emph{graduatoria}, \emph{scadenze}, and \emph{tasse}. These words belong to the scholarship domain, but refer to neighboring intents rather than eligibility requirements.
+\end{failurebox}
+
+\begin{effectbox}
+The focused augmentation used only terms aligned with the target section: \emph{requisiti richiesti}, \emph{idoneità}, \emph{merito}, and \emph{benefici}. The official Opera bando page titled \emph{REQUISITI RICHIESTI} entered the top three and contained the complete structure of the answer: economic condition, merit requirements, eligibility, and later-year credit requirements.
+\end{effectbox}
+
+This case shows that augmentation quality depends on selectivity rather than length. The rewrite should not describe the whole administrative domain; it should add only the vocabulary needed to make the intended section competitive.
+
+\subsection{Cross-Case Interpretation}
+
+The four cases reveal three recurring mechanisms.
+
+\paragraph{Generic syntax creates cross-domain collisions.} Phrases such as \emph{quali sono}, \emph{come posso}, \emph{trovare}, \emph{presentazione}, and \emph{disponibile} occur in many institutional FAQs and can dominate the ranking in a noisy corpus.
+
+\paragraph{The rewrite adds administrative concepts, not only synonyms.} The most useful additions were local concepts such as \emph{compilazione / Esse3 / periodo}, \emph{soggetto ospitante}, \emph{riconoscimento certificazioni linguistiche}, and \emph{idoneità / merito / benefici}.
+
+\paragraph{Better query formulation does not remove retrieval-side limitations.} Even when the correct vocabulary is supplied, shorter FAQ headings, duplicate yearly documents, or unrelated pages with overlapping terms may still receive high scores. Query rewriting improves the input to BM25, but does not replace good extraction, field weighting, duplicate handling, or linguistic analysis.
+
+Overall, these cases support the interpretation that the LLM is useful as a thin semantic layer over deterministic retrieval. Its role is not to replace BM25 or generate the answer, but to reshape informal student language into a lexical form that better matches the terminology and section structure of official documents.
