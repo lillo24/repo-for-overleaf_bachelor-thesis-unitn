@@ -19,48 +19,110 @@ Student query $\rightarrow$ LLM query rewrite $\rightarrow$ BM25 search query
 The rewritten query is then submitted to the same BM25 index used by the baseline system. This makes the comparison focused: the retrieval backend remains fixed, while only the query formulation changes.
 
 \section{Rewrite Prompt/Instructions}
-The rewrite instruction is this one:
-
 \begin{quote}
 \small
 \begin{Verbatim}[
     breaklines=true,
     breakanywhere=true,
     fontsize=\small,
-    xleftmargin=1.2cm,
+    xleftmargin=0.8cm,
     frame=none
 ]
 # Task
-Rewrite the university student's question into one concise lexical search query for document retrieval with BM25.
+Rewrite the university student's question for BM25 document retrieval using two query layers.
+Pushing towards lexical search terms that help retrieve official university pages, FAQ pages, and regulation PDFs.
 
-# Requirements
-- Return one best rewritten query only
+# General Requirements
+- Do not answer the question.
+- Keep the rewritten queries concise, keyword-dense, and lexical.
 
-- Do not answer the question; preserve the student's underlying information need and reshape the wording for retrieval.
-- Keep the rewritten query concise, keyword-dense, and lexical, avoiding unnecessary filler or explanation.
-- Prefer terms that are useful for searching official university pages and regulation PDFs, especially using Italian bureaucratic wording when the input is in Italian.
-- Prefer document-content terms likely to appear in titles, headings, or body text.
+- Remove weak function words when they do not help retrieval, especially articles, copulas, auxiliaries, and generic prepositions such as `il`, `lo`, `la`, `i`, `gli`, `le`, `sono`, `è`, `devo`, `posso`, `per`, `a`, `di`. Instead, keep the function word when it is part of a useful fixed phrase or changes the meaning. For example, keep `di` in `piano di studi`, because `piano di studi` is a fixed concept.
 
-- Write the rewritten query in the language specified by the `rewrite_language` input field.
+- Prefer terms likely to appear in official titles, headings, FAQ questions, PDF section headings, or section labels. Use body-text terms only when they are central to the student's question.
 
-- Do not invent facts, dates, etc.
-- Do not add generic corpus/source labels such as "UniTN", "Universita di Trento", "university", or "ateneo"
-- Do not add course or programme names to the rewritten query unless the student explicitly wrote that name in the question.
+- Do not invent facts, dates, deadlines, course names, programme names, requirements, or procedures.
+- Do not add generic corpus/source labels such as "UniTN", "Universita di Trento", "university", or "ateneo".
+- Do not add course or programme names, source names or institutional entities, unless the student explicitly wrote that name in the question.
 
+# Query layers
+Produce only two query layers:
 
-# Testing
-- Return a brief ambiguity note separately only if the question is meaningfully ambiguous, otherwise set `ambiguity_hint` to null.
-- Do not raise an ambiguity hint if the academic year is missing.
+- `cleaned_original_query`
+- `augmentation_query`
 
+Treat the student's original core terms as the retrieval anchor: foreground them in `cleaned_original_query`, and make `augmentation_query` support them without replacing or overpowering them.
+
+## cleaned_original_query
+- Reuse only words and concepts from the original question.
+
+- Remove weak function words unless they are needed for meaning.
+- Keep question words such as `come`, `quando`, `dove`, `chi`, `cosa`, `quali/quale` only when they help preserve the intent.
+
+E.g. 
+Good: `quali requisiti accedere borse opera`
+Bad: `quali sono i requisiti per accedere alle borse di opera`
+
+## augmentation_query
+- Add a small amount of retrieval context. Aim for 3 to 5 strong content terms or short fixed phrases.  
+- Add synonyms or related terms only when they preserve the same information need.
+
+- Avoid terms that are only broadly related to the topic, because one overly general word can damage BM25 ranking.
+Examples of bad shifts:
+=> `tasse quando fuoricorso` -> `iscrizione`
+=> `calcolo voto di laurea` -> `commissione`
 
 # Examples
-- User: "Cosa succede se vado fuori corso?"
-  Good rewritten_query: "fuori corso conseguenze regolamento studenti carriera universitaria"
-  Bad rewritten_query: "conseguenze andare fuori corso UniTN cosa succede fuori corso regolamento"
+Student question:
+`Come si modifica il piano di studi?`
 
-- User: "Come cambio il piano di studi?"
-  Good rewritten_query: "modifica piano di studi scadenze modulo Esse3"
-  Bad rewritten_query: "modifica piano di studi UniTN"
+Good:
+```json
+{
+  "cleaned_original_query": "come modificare piano di studi",
+  "augmentation_query": "modifica piano di studio Esse3 modulo"
+}
+```
+
+Student question:
+`Quali sono le scadenze per la presentazione o la modifica del piano di studi?`
+
+Good:
+```json
+{
+  "cleaned_original_query": "quali scadenze presentazione modifica piano di studi",
+  "augmentation_query": "periodi compilazione piano di studio Esse3"
+}
+```
+
+Student question:
+`In quali casi devo restituire la borsa di studio?`
+
+Good:
+```json
+{
+  "cleaned_original_query": "quali casi restituire borsa studio",
+  "augmentation_query": "revoca restituzione benefici decadenza"
+}
+```
+
+Student question:
+`Quali sono i requisiti per accedere alle borse di opera?`
+
+Good:
+```json
+{
+  "cleaned_original_query": "quali requisiti accedere borse opera",
+  "augmentation_query": "requisiti richiesti merito benefici"
+}
+```
+
+Bad:
+```json
+{
+  "cleaned_original_query": "quali sono i requisiti per accedere alle borse di opera",
+  "augmentation_query": "borse di opera requisiti accesso domanda bando graduatoria scadenze tasse beneficio"
+}
+```
 \end{Verbatim}
 \end{quote}
 
