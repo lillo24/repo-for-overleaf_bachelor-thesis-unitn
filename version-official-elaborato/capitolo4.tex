@@ -1,172 +1,44 @@
 \chapter{Query Rewriting and Evaluation Methodology}
 
-Student queries often use informal, incomplete, or conversational language. Official university documents, on the other hand, usually use formal, administrative, and domain-specific terminology. Even when the student's intent is clear to a human reader, the same query may not contain the lexical signals needed by a BM25 retrieval system.
+Student questions often use informal or conversational language, while official university documents use administrative terminology. Even when the intent is clear to a human reader, the query may lack the lexical signals needed by BM25. The rewrite layer is therefore used as a lightweight semantic adapter before deterministic retrieval.
 
-This motivates the use of a low-cost LLM as a query-rewriting layer. In this thesis, the model is not used as the main answer generator in the evaluated experiment. Instead, it is used as a lightweight semantic adapter between the student's natural-language request and the deterministic BM25 search engine.
-
-\section{Rewrite Task}
-The rewrite component receives a user message and produces a concise search-oriented query. The output should preserve the original information need while reformulating it with terms that are more likely to appear in official UniTN sources.
-
-The task can be summarized as follows:
-
-\begin{center}
-\fbox{\begin{minipage}{0.88\linewidth}
-\centering
-Student query $\rightarrow$ LLM query rewrite $\rightarrow$ BM25 search query
-\end{minipage}}
-\end{center}
-
-The rewritten query is then submitted to the same BM25 index used by the baseline system. This makes the comparison focused: the retrieval backend remains fixed, while only the query formulation changes.
-
-\section{Rewrite Prompt/Instructions}
-\begin{quote}
-\small
-\begin{Verbatim}[
-    breaklines=true,
-    breakanywhere=true,
-    breaksymbolleft={},
-    fontsize=\small,
-    xleftmargin=0.8cm,
-    frame=none
-]
-# Task
-Rewrite the university student's question for BM25 document retrieval using two query layers.
-Pushing towards lexical search terms that help retrieve official university pages, FAQ pages, and regulation PDFs.
-
-# General Requirements
-- Do not answer the question.
-- Keep the rewritten queries concise, keyword-dense, and lexical.
-
-- Remove weak function words when they do not help retrieval, especially articles, copulas, auxiliaries, and generic prepositions such as `il`, `lo`, `la`, `i`, `gli`, `le`, `sono`, `è`, `devo`, `posso`, `per`, `a`, `di`. Instead, keep the function word when it is part of a useful fixed phrase or changes the meaning. For example, keep `di` in `piano di studi`, because `piano di studi` is a fixed concept.
-
-- Prefer terms likely to appear in official titles, headings, FAQ questions, PDF section headings, or section labels. Use body-text terms only when they are central to the student's question.
-
-- Do not invent facts, dates, deadlines, course names, programme names, requirements, or procedures.
-- Do not add generic corpus/source labels such as "UniTN", "Universita di Trento", "university", or "ateneo".
-- Do not add course or programme names, source names or institutional entities, unless the student explicitly wrote that name in the question.
-
-# Query layers
-Produce only two query layers:
-
-- `cleaned_original_query`
-- `augmentation_query`
-
-Treat the student's original core terms as the retrieval anchor: foreground them in `cleaned_original_query`, and make `augmentation_query` support them without replacing or overpowering them.
-
-## cleaned_original_query
-- Reuse only words and concepts from the original question.
-
-- Remove weak function words unless they are needed for meaning.
-- Keep question words such as `come`, `quando`, `dove`, `chi`, `cosa`, `quali/quale` only when they help preserve the intent.
-
-E.g. 
-Good: `quali requisiti accedere borse opera`
-Bad: `quali sono i requisiti per accedere alle borse di opera`
-
-## augmentation_query
-- Add a small amount of retrieval context. Aim for 3 to 5 strong content terms or short fixed phrases.  
-- Add synonyms or related terms only when they preserve the same information need.
-
-- Avoid terms that are only broadly related to the topic, because one overly general word can damage BM25 ranking.
-Examples of bad shifts:
-=> `tasse quando fuoricorso` -> `iscrizione`
-=> `calcolo voto di laurea` -> `commissione`
-
-# Examples
-Student question:
-`Come si modifica il piano di studi?`
-
-Good:
-```json
-{
-  "cleaned_original_query": "come modificare piano di studi",
-  "augmentation_query": "modifica piano di studio Esse3 modulo"
-}
-```
-
-Student question:
-`Quali sono le scadenze per la presentazione o la modifica del piano di studi?`
-
-Good:
-```json
-{
-  "cleaned_original_query": "quali scadenze presentazione modifica piano di studi",
-  "augmentation_query": "periodi compilazione piano di studio Esse3"
-}
-```
-
-Student question:
-`In quali casi devo restituire la borsa di studio?`
-
-Good:
-```json
-{
-  "cleaned_original_query": "quali casi restituire borsa studio",
-  "augmentation_query": "revoca restituzione benefici decadenza"
-}
-```
-
-Student question:
-`Quali sono i requisiti per accedere alle borse di opera?`
-
-Good:
-```json
-{
-  "cleaned_original_query": "quali requisiti accedere borse opera",
-  "augmentation_query": "requisiti richiesti merito benefici"
-}
-```
-
-Bad:
-```json
-{
-  "cleaned_original_query": "quali sono i requisiti per accedere alle borse di opera",
-  "augmentation_query": "borse di opera requisiti accesso domanda bando graduatoria scadenze tasse beneficio"
-}
-```
-\end{Verbatim}
-\end{quote}
-
-
-It enforces the following constraints:
+\section{Two-Layer Rewrite Task}
+For each student question, the LLM produces two fields:
 
 \begin{itemize}
-    \item preserve the original information need;
-    \item do not answer the question;
-    \item do not invent missing course names, academic years, procedures, or requirements;
-    \item output a concise search query suitable for BM25 retrieval;
-    \item prefer terminology likely to appear in official institutional documents;
-    \item retain specific official keywords when they are already present and useful.
+    \item \texttt{cleaned\_original\_query}: a compact version of the original wording that preserves the information need and its key terms;
+    \item \texttt{augmentation\_query}: a small number of additional lexical terms or fixed phrases likely to occur in official titles, headings, FAQs, or regulations.
 \end{itemize}
 
-These constraints are important because query rewriting can also introduce errors. If the model changes the student's intent or adds assumptions, retrieval may improve lexically while becoming semantically wrong.
+The cleaned layer remains the retrieval anchor. The augmentation layer supports it without replacing the original intent. The final rewritten condition searches both layers, with the cleaned layer weighted more strongly.
 
-\section{Why Heuristics are Worse?}
-Some query improvements can be handled with deterministic rules, such as lowercasing, removing punctuation, or expanding simple word variants. However, many mismatches are semantic rather than only syntactic. The same student intent can be expressed in many informal ways, while the official wording may use administrative concepts that are not obvious to a student.
+The rewrite prompt forbids answering the question, inventing facts, adding unspecified course names, or expanding toward only broadly related administrative topics. This restriction is necessary because a longer query is not automatically better: unrelated but domain-plausible words can damage BM25 ranking.
 
-For example, a student may ask whether a grade can be removed from the academic record, while official documents may use terms such as \emph{rinuncia}, \emph{annullamento}, \emph{carriera}, or \emph{verbalizzazione}. A purely heuristic approach would require manually encoding many of these mappings. The thesis therefore tests whether a low-cost LLM can provide a practical middle ground: cheaper and simpler than a full agentic system, but more flexible than hand-written rewrite rules.
-
-
-
-\section{Manual Relevance Judgement}
-
+\section{Experimental Conditions}
+The experiment crosses two query conditions with two corpus conditions:
 
 \begin{table}[h]
 \centering
 \begin{tabular}{lll}
 \toprule
-\textbf{Condition} & \textbf{Input to BM25} & \textbf{Purpose} \\
+\textbf{Dimension} & \textbf{Condition} & \textbf{Meaning} \\
 \midrule
-Baseline & Original query & Measure raw BM25 performance \\
-Rewrite & LLM-rewritten query & Measure the effect of semantic rewriting \\
+Query & Original & Student question submitted directly to BM25 \\
+Query & Rewritten & Frozen two-layer LLM rewrite submitted to BM25 \\
+Corpus & Polished & Curated source set with limited unrelated material \\
+Corpus & Noisy & Broader source set containing the polished documents and additional sources \\
 \bottomrule
 \end{tabular}
-\caption{Experimental retrieval conditions.}
-\label{tab:experimental-conditions}
+\caption{Experimental factors.}
+\label{tab:experimental-factors}
 \end{table}
 
+The benchmark contains 26 queries. For each corpus, the original-query baseline is run once. Three rewrite sets are generated independently, frozen, and reused unchanged on both corpora. This produces a controlled comparison in which rewrite variability and corpus noise can be analysed separately.
 
-Retrieved results are manually labelled according to their usefulness for answering the query. A simple three-level scale is used.
+All conditions use the same BM25 profile, field weights, document-collapse policy, and top-$k$ depth. Only the query representation and exact source-set filter change.
+
+\section{Manual Relevance Judgement}
+Each of the top three retrieved documents is manually assigned one of the following labels:
 
 \begin{table}[h]
 \centering
@@ -174,50 +46,77 @@ Retrieved results are manually labelled according to their usefulness for answer
 \toprule
 \textbf{Label} & \textbf{Name} & \textbf{Meaning} \\
 \midrule
-2 & Relevant & The result is an official source that directly answers the query. \\
-1 & Partially relevant & The result is related but incomplete, ambiguous, or only indirectly useful. \\
-0 & Not relevant & The result does not answer the query or is unrelated. \\
+2 & Relevant & Directly provides the information needed to answer the question. \\
+1 & Partially relevant & Useful but incomplete, indirect, ambiguous, or insufficient by itself. \\
+0 & Irrelevant & Does not contribute useful evidence for the question. \\
 \bottomrule
 \end{tabular}
 \caption{Manual relevance scale.}
 \label{tab:relevance-scale}
 \end{table}
 
-The primary metrics treat label 2 as relevant. A secondary analysis can also report results when labels 1 and 2 are both treated as useful.
+An \emph{unclear} state is available during annotation, but unresolved hits are not accepted in the final evaluation package. Judgements follow the query--result pair: the same retrieved segment for the same case must receive the same label across runs.
 
-\section{Retrieval Metrics}
+Two evaluation interpretations are reported:
 
-\subsection{Success@1}
-Success@1 measures whether the first retrieved result is relevant:
+\begin{itemize}
+    \item \textbf{Strict}: only relevant results count as useful;
+    \item \textbf{Lenient}: relevant and partially relevant results both count as useful.
+\end{itemize}
+
+\section{Primary Retrieval Metrics}
+Because only the top three distinct documents are retrieved and judged, the primary cutoffs are 1 and 3. Hit@5 is not reported as a separate result.
+
+\subsection{Hit@$k$}
+For query $q$, Hit@$k$ is one when at least one useful result appears within ranks $1$ to $k$, and zero otherwise:
 
 \begin{equation}
-Success@1(q) =
+\operatorname{Hit@k}(q)=
 \begin{cases}
-1, & \text{if the result at rank 1 is relevant} \\
+1, & \text{if at least one useful result occurs at rank } \leq k,\\
 0, & \text{otherwise.}
 \end{cases}
 \end{equation}
 
-This metric is useful because users often inspect the first result first.
+The reported values are the mean over all evaluated queries for $k=1$ and $k=3$. Strict and lenient versions differ only in which relevance labels count as useful.
 
-\subsection{Success@5}
-Success@5 measures whether at least one relevant result appears in the first five results:
-
-\begin{equation}
-Success@5(q) =
-\begin{cases}
-1, & \text{if any result at ranks 1--5 is relevant} \\
-0, & \text{otherwise.}
-\end{cases}
-\end{equation}
-
-This metric is useful because the interface can show multiple candidates and the system may still be useful if the correct source appears within the first page of results.
+Hit@3 is the main answerability measure: it estimates the proportion of questions for which the retrieved context contains at least one usable official source.
 
 \subsection{Mean Reciprocal Rank}
-Mean Reciprocal Rank (MRR) rewards systems that place the first relevant result higher in the ranking:
+Mean Reciprocal Rank rewards systems that place the first useful result higher:
 
 \begin{equation}
-MRR = \frac{1}{|Q|} \sum_{q \in Q} \frac{1}{rank_q}
+\operatorname{MRR}=\frac{1}{|Q|}\sum_{q \in Q}\frac{1}{r_q},
 \end{equation}
 
-where $rank_q$ is the rank position of the first relevant result for query $q$. If no relevant result is found, the reciprocal rank is defined as 0.
+where $r_q$ is the rank of the first useful result and the reciprocal rank is zero when no useful result appears in the top three. Strict MRR uses the first relevant result; lenient MRR uses the first relevant or partially relevant result.
+
+\section{Additional Context Metrics}
+Hit@3 measures whether the query is answerable from the retrieved window, but it does not distinguish one useful source from several complementary sources. Extra-context metrics therefore evaluate only the evidence beyond the first useful result.
+
+For each answerable case, the \textbf{primary useful hit} is selected as follows:
+
+\begin{enumerate}
+    \item the first relevant result, when one exists;
+    \item otherwise, the first partially relevant result.
+\end{enumerate}
+
+The primary hit is removed from extra-context scoring. Each remaining relevant hit contributes $1$, each remaining partial hit contributes $0.5$, and all other hits contribute $0$.
+
+Let $A$ be the set of answerable cases, $E \subseteq A$ the cases with positive extra-context gain, and $g_q$ the extra gain for case $q$. The reported metrics are:
+
+\begin{align}
+\operatorname{ExtraCoverage@3} &= \frac{|E|}{|A|},\\
+\operatorname{ExtraGainPerAnswerable@3} &= \frac{\sum_{q\in A}g_q}{|A|},\\
+\operatorname{ExtraGainWhenPresent@3} &= \frac{\sum_{q\in E}g_q}{|E|}.
+\end{align}
+
+The first metric shows how often answerable queries receive additional useful context. The second keeps answerable cases with no extra evidence in the denominator. The third describes the strength of the added context only when it is present.
+
+\section{Paired Comparison and Reproducibility}
+Original and rewritten results are compared case by case. Aggregate deltas are considered valid only when both runs use the same query set, corpus source set, retrieval profile, and top-$k$ depth.
+
+The evaluation package stores the raw retrieval runs, frozen rewrite snapshots, manual judgements, and paired comparison exports. The paired JSON export contains strict and lenient Hit@1, Hit@3, MRR, extra-context metrics, aggregate deltas, and per-case rank changes.
+
+This design keeps the evaluated retrieval process inspectable: the LLM generates the rewrite once, while BM25 ranking, corpus filtering, manual judgements, and metric computation remain deterministic for the frozen inputs.
+\par
