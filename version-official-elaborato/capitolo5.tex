@@ -1,108 +1,69 @@
+\chapter{Results, Discussion, and Conclusions}
 
-\chapter{Conclusions and Future Work}
+\section{Quantitative Results}
+The final quantitative analysis is reported through one consolidated table covering the original-query baselines and the three frozen rewrite sets on both the polished and noisy corpora. The table reports strict and lenient Hit@1, Hit@3, and MRR, together with the extra-context metrics defined in Chapter~4.
 
-\section{Experimental Results}
-The main retrieval results will compare the BM25 baseline against the LLM-rewritten query condition. The table will be filled after running the final evaluation.
+The consolidated presentation is preferred over separate partially overlapping tables because it supports three comparisons at once:
 
-\begin{table}[h]
-\centering
-\begin{tabular}{lccc}
-\toprule
-\textbf{Condition} & \textbf{Success@1} & \textbf{Success@5} & \textbf{MRR} \\
-\midrule
-BM25 original query & TODO & TODO & TODO \\
-BM25 rewritten query & TODO & TODO & TODO \\
-\bottomrule
-\end{tabular}
-\caption{Retrieval performance comparison.}
-\label{tab:results-main}
-\end{table}
+\begin{itemize}
+    \item the effect of query rewriting relative to the original-query baseline;
+    \item the stability of the three independently generated rewrite sets;
+    \item the effect of corpus noise when the same frozen rewrites are applied to both source sets.
+\end{itemize}
 
-The expected interpretation is not only whether query rewriting improves the average scores, but also in which classes of queries it helps. The most relevant cases are those where the student query is understandable to a human but lexically distant from the terminology used in official sources.
+The numerical table is maintained as the single source of truth for the final results and is intentionally not duplicated elsewhere in this chapter.
+
+\section{How the Results Should Be Read}
+Hit@3 is the main answerability measure: it captures whether at least one useful official source appears in the retrieved window. Hit@1 and MRR describe ranking quality within that window. Strict metrics require a directly relevant source, while lenient metrics also accept partially useful evidence.
+
+The extra-context metrics answer a different question. They measure whether an already answerable query receives additional useful sources after the primary hit has been removed. They should therefore be interpreted as evidence richness, not as a replacement for Hit@3.
+
+The repeated rewrite runs are evidence of directional robustness rather than perfect determinism. With 26 cases, one changed case corresponds to approximately 3.8 percentage points, so small metric changes may reflect only one query moving between ranks.
 
 \input{qualitative_case_analysis}
 
-\section{TODO / INTEGRATE: Rewrite Stability Across Repeated Runs}
-This is a good stability result. The rewrite is not perfectly deterministic, but the variation is small enough to be acceptable.
-
-\begin{table}[h]
-\centering
-\begin{tabular}{lccc}
-\toprule
-\textbf{Condition} & \textbf{Hit@1} & \textbf{Hit@3} & \textbf{MRR} \\
-\midrule
-Frozen rewrite, strict & 38.5--46.2\% & 76.9--84.6\% & 0.551--0.609 \\
-Frozen rewrite, lenient & 65.4--69.2\% & 80.8--92.3\% & 0.718--0.801 \\
-\bottomrule
-\end{tabular}
-\caption{Observed range across repeated runs with the same rewrite instruction.}
-\label{tab:rewrite-stability}
-\end{table}
-
-Because the dataset is small, one case corresponds to approximately 3.8 percentage points, so most changes represent only one to three cases moving around in the ranking.
-
-The important thesis-level conclusion is that, across repeated runs with the same rewrite instruction, frozen rewriting consistently outperformed the original-query baseline by a large margin, although individual ranks varied slightly.
-
-These three runs should be used as evidence of directional robustness, not as evidence that the exact metric values are perfectly stable. The safest reporting strategy is either to report the average over the three runs or to state that repeated runs remained in the same performance band.
-
 \section{Discussion and Error Analysis}
-The error analysis should explain why query rewriting helps or fails. Possible failure classes include:
+The evaluation distinguishes failures caused by query formulation from failures caused by the retrieval environment.
 
 \begin{itemize}
-    \item \textbf{Missing source}: the correct official source is not in the indexed corpus;
-    \item \textbf{Bad source granularity}: the document is indexed, but the relevant information is hidden in a long segment or split across segments;
-    \item \textbf{Ambiguous query}: the question is course-specific but does not specify the degree programme;
-    \item \textbf{Rewrite drift}: the LLM changes the original intent or adds unsupported assumptions;
-    \item \textbf{Lexical mismatch remains}: the rewritten query still does not match the official wording;
-    \item \textbf{Duplicate yearly documents}: old and new versions compete in the ranking;
-    \item \textbf{Right retrieval, wrong downstream answer}: relevant mainly for the broader product prototype, not for the core retrieval experiment.
+    \item \textbf{Lexical mismatch}: the student wording and official terminology remain too different;
+    \item \textbf{Rewrite drift}: augmentation introduces a neighbouring administrative intent or unsupported assumption;
+    \item \textbf{Generic-language collision}: common conversational expressions match unrelated FAQ headings;
+    \item \textbf{Missing source}: the correct official document is absent from the selected corpus;
+    \item \textbf{Corpus noise}: additional unrelated documents compete with the intended source;
+    \item \textbf{Granularity or field-weighting issue}: the right document is indexed, but its relevant segment is not competitive;
+    \item \textbf{Duplicate or yearly versions}: similar documents compete for the same ranking positions.
 \end{itemize}
 
-This analysis is important because the goal of the thesis is not simply to report a single score. The goal is to understand whether a lightweight LLM layer can improve a deterministic retrieval pipeline, and under which conditions this design is useful.
+The polished/noisy comparison is particularly important because it tests whether rewriting remains useful when relevant sources must compete with a substantially larger corpus. A rewrite that performs well only in the curated corpus would be less convincing as a practical retrieval component.
 
 \section{Product Context}
-This thesis is extracted from a broader product-oriented prototype for a university bureaucracy assistant. The broader system includes controlled source acquisition, manifest/versioning, HTML/PDF extraction, BM25 indexing, a backend service, a frontend interface, and debugging tools for inspecting acquisition and extraction.
+The thesis is extracted from a broader prototype for a university bureaucracy assistant. The complete system includes controlled acquisition, manifest and revision tracking, HTML/PDF extraction, OpenSearch BM25 retrieval, backend APIs, a frontend interface, and debugging tools.
 
-The product-oriented goal is to support students and administrative staff by providing a trustworthy interface over official university sources. However, the thesis isolates one measurable component: whether LLM query rewriting improves retrieval quality.
+The thesis isolates retrieval because correct source selection is a necessary condition for grounded answer generation. Fluent generation cannot compensate for missing or irrelevant evidence.
 
 \section{Limitations}
-The current thesis focuses on retrieval rather than full answer generation. This keeps the experiment measurable, but it does not fully evaluate chatbot behavior. Citation correctness, refusal behavior, answer faithfulness, and user satisfaction are therefore outside the core evaluation unless added as secondary analysis.
+The benchmark contains 26 queries, so the results should not be interpreted as a comprehensive estimate for all university bureaucracy questions. The cases are manually curated and judged by one evaluator, which introduces possible selection and annotation bias.
 
-Another limitation is source coverage. If the correct document is missing from the corpus, query rewriting cannot solve the problem. In such cases, the limitation belongs to acquisition and corpus completeness, not only to retrieval.
+The experiment evaluates only the top three distinct documents. It does not measure full answer correctness, citation faithfulness, refusal quality, latency, or student satisfaction. The corpus is also limited to selected institutional domains and one university context.
 
-Finally, query rewriting itself can introduce errors. A rewritten query may be lexically stronger while semantically drifting from the original student intent. This is why manual relevance judgement and error analysis remain necessary.
-
-\section{TODO / INTEGRATE: Italian Stemmed and Analyzed Fallback Field}
-A possible improvement, not included in the current experiment, is to add an Italian stemmed or analyzed fallback field to the BM25 index. This would be applied to both experimental conditions: the original-query baseline and the LLM-rewritten query condition.
-
-The motivation is that some retrieval failures may be caused by small morphological differences rather than by a deeper semantic mismatch. For example, a query term may appear in one form in the rewritten query and in another form in the official source, such as singular/plural or masculine/feminine variants. In these cases, changing the rewrite prompt is probably the wrong fix, because it risks hard-coding domain-specific terms and adding noise. A better retrieval-side improvement would be to search both exact fields and Italian-analyzed fields, while keeping exact title, heading, and body fields boosted.
-
-This would create a useful future comparison:
-
-\begin{itemize}
-    \item BM25 with exact fields only;
-    \item BM25 with exact fields plus Italian stemmed/analyzed fallback;
-    \item BM25 with LLM query rewriting over exact fields;
-    \item BM25 with LLM query rewriting over exact fields plus Italian stemmed/analyzed fallback.
-\end{itemize}
-
-This distinction matters because query rewriting and linguistic analysis solve different parts of the retrieval problem. Query rewriting tries to bridge the student's informal intent with institutional wording. Stemming or linguistic analysis instead improves robustness to surface-form variation inside the same language.
+Query rewriting may improve lexical matching while still changing the user's intent. Manual relevance judgement and qualitative inspection remain necessary even when aggregate metrics improve.
 
 \section{Conclusions}
-This thesis evaluates whether a low-cost LLM can improve deterministic retrieval by rewriting informal student queries into better BM25 search queries. The broader motivation is that, in institutional question answering, answer fluency is not sufficient: correctness depends on retrieving the right official context.
+This thesis evaluates a low-cost LLM as a thin semantic layer over deterministic BM25 retrieval. The model does not replace the search engine and is not evaluated as the final answer generator. Its role is to preserve the student's information need while adding a small amount of institutional vocabulary that can make the intended official source more competitive.
 
-The central contribution is therefore not a generic chatbot, but an empirical study of a lightweight AI layer that may improve a hard-coded retrieval pipeline while preserving inspectability and provenance.
+The central contribution is therefore both architectural and empirical: a reproducible retrieval pipeline, a controlled original-versus-rewritten benchmark, and an analysis of how rewrite variability and corpus noise affect the result.
 
 \section{Future Work}
 Future work may include:
 
 \begin{itemize}
-    \item adding an Italian stemmed or analyzed fallback field while keeping exact fields boosted;
-    \item hybrid retrieval combining BM25 and vector search;
-    \item reranking retrieved results;
-    \item structured databases for hard constraints such as ECTS requirements;
-    \item stronger citation and refusal evaluation for generated answers;
-    \item broader source acquisition across additional university domains;
-    \item user studies with students and administrative staff;
-    \item full assistant evaluation including answer correctness and faithfulness.
+    \item an Italian stemmed or analysed fallback field while retaining exact-field boosts;
+    \item hybrid lexical and vector retrieval;
+    \item reranking of the BM25 candidate set;
+    \item larger and independently judged evaluation datasets;
+    \item automatic checks for rewrite drift;
+    \item broader source coverage and stronger yearly-document handling;
+    \item full assistant evaluation, including answer correctness, citations, refusals, and user studies.
 \end{itemize}
+\par
