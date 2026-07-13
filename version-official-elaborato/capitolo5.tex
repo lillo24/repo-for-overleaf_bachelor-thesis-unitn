@@ -1,60 +1,143 @@
 \chapter{Results, Discussion, and Conclusions}
 
 \section{Quantitative Results}
-The final quantitative analysis is reported through one consolidated table covering the original-query baselines and the three frozen rewrite sets on both the polished and noisy corpora. The table reports strict and lenient Hit@1, Hit@3, and MRR, together with the extra-context metrics defined in Chapter~4.
 
-The consolidated presentation is preferred over separate partially overlapping tables because it supports three comparisons at once:
+The final evaluation contains 26 questions, two corpus conditions, and four query conditions per corpus: one original-query baseline and three independently generated frozen rewrite sets. The same rewrite sets are reused on both corpora. Table~\ref{tab:results-consolidated} is the single consolidated source for the numerical results.
 
-\begin{itemize}
-    \item the effect of query rewriting relative to the original-query baseline;
-    \item the stability of the three independently generated rewrite sets;
-    \item the effect of corpus noise when the same frozen rewrites are applied to both source sets.
-\end{itemize}
+\begin{table}[htbp]
+\centering
+\fbox{\begin{minipage}{0.90\linewidth}
+\centering
+\textbf{Placeholder for the consolidated results table.}\\[0.4em]
+This box will be replaced by the final table containing the original baseline and the three rewrite runs for the polished and noisy corpora, with strict and lenient Hit@1, Hit@3, MRR, and the secondary extra-context metrics.
+\end{minipage}}
+\caption{Consolidated retrieval results across query and corpus conditions.}
+\label{tab:results-consolidated}
+\end{table}
 
-The numerical table is maintained as the single source of truth for the final results and is intentionally not duplicated elsewhere in this chapter.
+The quantitative analysis supports three related conclusions: rewriting consistently improves retrieval, the size of the improvement varies moderately across the three generated rewrite sets, and corpus noise reduces final retrieval quality even when rewriting is used. Because the benchmark contains 26 cases, one changed case corresponds to approximately 3.8 percentage points. The results are therefore interpreted descriptively rather than as precise population estimates.
 
-\section{How the Results Should Be Read}
-Hit@3 is the main answerability measure: it captures whether at least one useful official source appears in the retrieved window. Hit@1 and MRR describe ranking quality within that window. Strict metrics require a directly relevant source, while lenient metrics also accept partially useful evidence.
+\subsection{Effect of Query Rewriting}
 
-The extra-context metrics answer a different question. They measure whether an already answerable query receives additional useful sources after the primary hit has been removed. They should therefore be interpreted as evidence richness, not as a replacement for Hit@3.
+Across all three rewrite sets, every main aggregate metric improves over the corresponding original-query baseline in both corpora. Averaged across the three rewrites, strict Hit@1 increases by 19.2 percentage points in both corpus conditions. Strict Hit@3 increases by 17.9 points in the polished corpus and by 25.6 points in the noisy corpus. Strict MRR increases by 0.212 and 0.237, respectively.
 
-The repeated rewrite runs are evidence of directional robustness rather than perfect determinism. With 26 cases, one changed case corresponds to approximately 3.8 percentage points, so small metric changes may reflect only one query moving between ranks.
+The same direction appears under the lenient interpretation. Mean gains are 23.1 points for Hit@1, 12.8 points for Hit@3, and 0.203 MRR in the polished corpus; in the noisy corpus they are 17.9 points, 17.9 points, and 0.188 MRR. The improvement is therefore not limited to a single relevance threshold or one favourable rewrite generation.
+
+Figure~\ref{fig:rewrite-effect-main-metrics} will visualise the original baseline against the mean and range of the three rewrite runs. The most important reading is not that every query improves, but that all six aggregate ranking measures move in the same favourable direction in both corpus environments.
+
+\begin{figure}[htbp]
+\centering
+\fbox{\begin{minipage}{0.88\linewidth}
+\centering
+\textbf{Plot placeholder: effect of query rewriting.}\\[0.4em]
+Planned plot: grouped points or bars for original versus mean rewritten performance, separated by polished/noisy corpus and strict/lenient policy. Error bars or range markers show the minimum and maximum across the three rewrite sets.
+\end{minipage}}
+\caption{Effect of query rewriting on Hit@1, Hit@3, and MRR in the polished and noisy corpora.}
+\label{fig:rewrite-effect-main-metrics}
+\end{figure}
+
+The larger strict Hit@3 gain in the noisy corpus should not be interpreted as the noisy corpus performing better. Its original baseline is much weaker, leaving more room for improvement. Rewriting recovers part of the loss caused by lexical competition, but the final noisy-corpus scores remain lower.
+
+\subsection{Rewrite Stability}
+
+The three rewrite sets produce the same overall conclusion, but not identical rankings. In the polished corpus, strict Hit@3 ranges from 61.5\% to 73.1\%, with a population standard deviation of 4.8 percentage points; strict MRR ranges from 0.474 to 0.532, with a standard deviation of 0.024. The corresponding noisy-corpus variation is larger: strict Hit@3 ranges from 46.2\% to 61.5\%, and strict MRR from 0.321 to 0.436.
+
+Case-level agreement supports the same interpretation. Under the strict policy, all three rewrites produce the same improved/same/worsened outcome for 19 of 26 polished cases and 18 of 26 noisy cases. Under the lenient policy, agreement rises to 24 of 26 polished cases and 21 of 26 noisy cases. No case is unanimously worsened under the strict policy.
+
+Figure~\ref{fig:rewrite-stability} will show the three rewrite runs separately. The cleanest stability result is the polished lenient condition: most questions either improve or remain unchanged across all three generations. The noisy corpus is less stable because more competing documents can react differently to small changes in augmentation terms.
+
+\begin{figure}[htbp]
+\centering
+\fbox{\begin{minipage}{0.88\linewidth}
+\centering
+\textbf{Plot placeholder: rewrite stability.}\\[0.4em]
+Planned plot: one point per frozen rewrite set for each main metric, with polished and noisy corpora shown side by side. A companion annotation reports all-three case-outcome agreement under strict and lenient policies.
+\end{minipage}}
+\caption{Variation across the three independently generated frozen rewrite sets.}
+\label{fig:rewrite-stability}
+\end{figure}
+
+These results indicate directional robustness rather than determinism. The rewrite model can choose different but plausible institutional terms, and those terms sometimes change the ordering of close BM25 candidates. Repeated generation is therefore useful for estimating sensitivity, even though the core conclusion remains stable.
+
+\subsection{Effect of Corpus Noise}
+
+Corpus noise has a substantial negative effect on absolute retrieval quality. Averaged across the three rewrite sets, polished-corpus strict Hit@1 is 34.6\%, compared with 23.1\% in the noisy corpus. Strict Hit@3 is 67.9\% versus 52.6\%, and strict MRR is 0.500 versus 0.365. The same pattern holds for the lenient metrics: polished retrieval reaches 65.4\% Hit@1, 85.9\% Hit@3, and 0.754 MRR, while the noisy condition reaches 52.6\%, 75.6\%, and 0.630.
+
+The original-query baseline is also strongly affected by noise. In strict Hit@3, the polished baseline exceeds the noisy baseline by 23.1 percentage points. After rewriting, the mean gap falls to 15.4 points. This suggests that rewriting partially mitigates lexical competition, but does not eliminate the importance of corpus curation and retrieval-side controls.
+
+Figure~\ref{fig:corpus-noise-effect} will compare the same original and frozen rewritten queries across the two source sets. Since query text and BM25 configuration are held fixed, the remaining difference is attributable to the corpus view and the additional documents competing for the top-three positions.
+
+\begin{figure}[htbp]
+\centering
+\fbox{\begin{minipage}{0.88\linewidth}
+\centering
+\textbf{Plot placeholder: effect of corpus noise.}\\[0.4em]
+Planned plot: paired polished/noisy values for the original baseline and each of the three rewrite sets. Lines connect identical query conditions across corpora, making the performance loss under noise directly visible.
+\end{minipage}}
+\caption{Effect of corpus noise when identical original and frozen rewritten queries are applied to both corpus views.}
+\label{fig:corpus-noise-effect}
+\end{figure}
+
+\subsection{Additional Context Metrics}
+
+Hit@3 remains the primary answerability metric. The extra-context measures answer a narrower question: after one useful source has already been found, does the top-three window contain additional useful evidence?
+
+These metrics require particular caution in the polished corpus. That corpus was curated around one intended primary source per benchmark question. Additional useful hits can still occur because a document selected for one question may also help answer another, but the corpus was not designed to contain multiple complementary sources for every case. Extra-context gain in the polished condition is therefore supplementary and partly reflects corpus construction rather than an independent retrieval objective.
+
+The noisy corpus has slightly higher mean ExtraCoverage@3 than the polished corpus, 57.1\% versus 55.3\%. This does not imply better retrieval. The denominator contains only answerable cases, which are fewer under noise. Moreover, mean gain per answerable case and gain when present are lower in the noisy corpus. ExtraCoverage@3 must therefore be read together with Hit@3 and the two gain measures, not in isolation.
 
 \input{qualitative_case_analysis}
 
 \section{Discussion and Error Analysis}
-The evaluation distinguishes failures caused by query formulation from failures caused by the retrieval environment.
+
+The aggregate and qualitative results point to a coherent mechanism. Original student questions often contain generic conversational structures---for example, \emph{come posso}, \emph{quali sono}, or broad terms such as \emph{presentazione} and \emph{disponibile}. In a heterogeneous institutional corpus, these expressions match many unrelated FAQ headings and body passages. BM25 can score such overlap highly even when the document does not address the intended procedure.
+
+Useful rewrites reduce that generic structure and introduce a small number of institutional concepts, such as study-plan compilation, host organisations, certificate recognition, or scholarship eligibility. This improves lexical alignment without replacing the deterministic retriever. The qualitative cases in Section~\ref{sec:qualitative-case-analysis} provide concrete examples of this effect.
+
+The remaining failures fall into several classes:
 
 \begin{itemize}
-    \item \textbf{Lexical mismatch}: the student wording and official terminology remain too different;
-    \item \textbf{Rewrite drift}: augmentation introduces a neighbouring administrative intent or unsupported assumption;
-    \item \textbf{Generic-language collision}: common conversational expressions match unrelated FAQ headings;
+    \item \textbf{Lexical mismatch}: the rewritten query still lacks the terminology used by the target source;
+    \item \textbf{Rewrite drift}: augmentation introduces a neighbouring administrative intent or an unsupported assumption;
+    \item \textbf{Generic-language collision}: common conversational expressions match unrelated FAQs;
     \item \textbf{Missing source}: the correct official document is absent from the selected corpus;
     \item \textbf{Corpus noise}: additional unrelated documents compete with the intended source;
     \item \textbf{Granularity or field-weighting issue}: the right document is indexed, but its relevant segment is not competitive;
     \item \textbf{Duplicate or yearly versions}: similar documents compete for the same ranking positions.
 \end{itemize}
 
-The polished/noisy comparison is particularly important because it tests whether rewriting remains useful when relevant sources must compete with a substantially larger corpus. A rewrite that performs well only in the curated corpus would be less convincing as a practical retrieval component.
+The polished/noisy comparison shows that query rewriting and corpus design solve different problems. Rewriting improves the lexical representation of the information need. Corpus curation, duplicate handling, segmentation, and field weighting determine which candidate documents compete and how strongly. A practical system needs both.
 
 \section{Product Context}
+
 The thesis is extracted from a broader prototype for a university bureaucracy assistant. The complete system includes controlled acquisition, manifest and revision tracking, HTML/PDF extraction, OpenSearch BM25 retrieval, backend APIs, a frontend interface, and debugging tools.
 
 The thesis isolates retrieval because correct source selection is a necessary condition for grounded answer generation. Fluent generation cannot compensate for missing or irrelevant evidence.
 
 \section{Limitations}
-The benchmark contains 26 queries, so the results should not be interpreted as a comprehensive estimate for all university bureaucracy questions. The cases are manually curated and judged by one evaluator, which introduces possible selection and annotation bias.
 
-The experiment evaluates only the top three distinct documents. It does not measure full answer correctness, citation faithfulness, refusal quality, latency, or student satisfaction. The corpus is also limited to selected institutional domains and one university context.
+The benchmark contains 26 manually curated questions, so the results should not be interpreted as a comprehensive estimate for all university bureaucracy queries. With this sample size, one case changes an aggregate Hit metric by approximately 3.8 percentage points.
 
-Query rewriting may improve lexical matching while still changing the user's intent. Manual relevance judgement and qualitative inspection remain necessary even when aggregate metrics improve.
+Judgements were produced by one evaluator. Although the same query--segment pair was labelled consistently across runs, independent annotation would be needed to estimate inter-rater agreement and reduce subjective bias.
+
+Only the top three distinct documents were evaluated. The study does not measure full answer correctness, citation faithfulness, refusal quality, latency, or student satisfaction. It also focuses on one university context and selected institutional domains.
+
+The polished corpus is intentionally artificial: it is curated around one intended source per question. This makes it useful for isolating lexical mismatch, but limits the interpretation of extra-context metrics and does not reproduce the full ambiguity of a deployed corpus.
+
+Finally, query rewriting can improve lexical matching while still changing the user's intent. Aggregate gains do not remove the need for manual case analysis and explicit checks for rewrite drift.
 
 \section{Conclusions}
-This thesis evaluates a low-cost LLM as a thin semantic layer over deterministic BM25 retrieval. The model does not replace the search engine and is not evaluated as the final answer generator. Its role is to preserve the student's information need while adding a small amount of institutional vocabulary that can make the intended official source more competitive.
 
-The central contribution is therefore both architectural and empirical: a reproducible retrieval pipeline, a controlled original-versus-rewritten benchmark, and an analysis of how rewrite variability and corpus noise affect the result.
+The research question asks whether a low-cost LLM rewrite layer can meaningfully improve BM25 retrieval over official bureaucratic sources. Within the limits of this benchmark, the answer is positive.
+
+All three frozen rewrite sets improve every main aggregate retrieval metric over the original-query baseline in both corpus conditions. The gain persists in the noisy corpus, showing that rewriting remains useful when relevant documents compete with substantially more unrelated material. At the same time, the noisy-corpus results remain below the polished-corpus results, confirming that query rewriting does not replace corpus quality and retrieval engineering.
+
+The repeated runs also show that the effect is reasonably stable but not deterministic. Most cases have the same outcome across all three rewrites, especially under the lenient policy in the polished corpus, while the noisy corpus is more sensitive to term-selection differences.
+
+The central contribution is therefore both architectural and empirical: a reproducible retrieval pipeline, a controlled original-versus-rewritten benchmark, and evidence that a thin LLM layer can bridge part of the lexical gap between student language and institutional terminology without replacing deterministic BM25 retrieval.
 
 \section{Future Work}
+
 Future work may include:
 
 \begin{itemize}
