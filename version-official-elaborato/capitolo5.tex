@@ -120,12 +120,6 @@ The benchmark contains 26 manually curated questions, so the results should not 
 
 Judgements were produced by one evaluator. Although the same query--segment pair was labelled consistently across runs, independent annotation would be needed to estimate inter-rater agreement and reduce subjective bias.
 
-Only the top three distinct documents were evaluated. The study does not measure full answer correctness, citation faithfulness, refusal quality, latency, or student satisfaction. It also focuses on one university context and selected institutional domains.
-
-The polished corpus is intentionally artificial: it is curated around one intended source per question. This makes it useful for isolating lexical mismatch, but limits the interpretation of extra-context metrics and does not reproduce the full ambiguity of a deployed corpus.
-
-Finally, query rewriting can improve lexical matching while still changing the user's intent. Aggregate gains do not remove the need for manual case analysis and explicit checks for rewrite drift.
-
 \section{Conclusions}
 
 The research question asks whether a low-cost LLM rewrite layer can meaningfully improve BM25 retrieval over official bureaucratic sources. Within the limits of this benchmark, the answer is positive.
