@@ -3,7 +3,7 @@
 
 Aggregate metrics show whether rewriting improves retrieval overall, but they do not explain why. The following representative cases illustrate recurring mechanisms observed in the judged runs. Exact aggregate values and run-to-run differences are reported only in the consolidated results table; this section focuses on the retrieval behaviour itself.
 
-Across the examples, the rewrite performs two complementary operations. It removes generic conversational structure while preserving the information need, then adds a small number of terms likely to occur in official institutional sources. The LLM is not asked to answer the question.
+Across the examples, the rewrite performs two complementary operations. It removes generic conversational structure while preserving the information need, then adds a small number of terms likely to occur in official institutional sources. For each case, the exact cleaned and augmentation layers from one representative frozen rewrite are shown; BM25 receives their concatenation. The LLM is not asked to answer the question.
 
 \newtcolorbox{failurebox}{enhanced,breakable,colback=black!1,colframe=black!45,boxrule=0.3pt,leftrule=1.4mm,arc=0.8mm,left=2mm,right=2mm,top=1mm,bottom=1mm,title=\textbf{What went wrong in the baseline},fonttitle=\small,coltitle=black}
 
@@ -11,7 +11,9 @@ Across the examples, the rewrite performs two complementary operations. It remov
 
 \subsection{Study-Plan Deadlines}
 
-\textbf{Original query:} \emph{Quali sono le scadenze per la presentazione o la modifica del piano di studi?}
+\textbf{Original query:} \emph{Quali sono le scadenze per la presentazione o la modifica del piano di studi?}\\
+\textbf{Cleaned query:} \emph{scadenze presentazione modifica piano di studi}\\
+\textbf{Augmentation:} \emph{termini compilazione piano di studio Esse3 periodo inserimento modifiche}
 
 \begin{failurebox}
 The baseline was vulnerable to generic bureaucratic expressions such as \emph{quali sono}, \emph{presentazione}, and \emph{scadenze}. These terms occur in many unrelated pages about scholarships, housing, and administrative forms, so lexical overlap did not reliably identify the study-plan workflow.
@@ -25,7 +27,9 @@ The improvement comes from specialising a generic deadline question toward a con
 
 \subsection{Finding an Internship Host}
 
-\textbf{Original query:} \emph{Come posso trovare un'azienda o un ente disponibile per un tirocinio?}
+\textbf{Original query:} \emph{Come posso trovare un'azienda o un ente disponibile per un tirocinio?}\\
+\textbf{Cleaned query:} \emph{come trovare azienda ente disponibile tirocinio}\\
+\textbf{Augmentation:} \emph{ricerca strutture ospitanti elenco aziende convenzioni tirocini}
 
 \begin{failurebox}
 The expressions \emph{come posso} and \emph{trovare} matched unrelated FAQ headings. The overlap was lexically strong but did not represent the student's information need.
@@ -39,7 +43,9 @@ This is a lexical translation between everyday wording and administrative termin
 
 \subsection{Language-Certificate Recognition}
 
-\textbf{Original query:} \emph{Posso usare un certificato per i corsi d'inglese aggiunti a Libretto, come il B2 o C1?}
+\textbf{Original query:} \emph{Posso usare un certificato per i corsi d'inglese aggiunti a Libretto, come il B2 o C1?}\\
+\textbf{Cleaned query:} \emph{posso usare certificato per corsi d inglese aggiunti Libretto B2 C1}\\
+\textbf{Augmentation:} \emph{riconoscimento certificazioni linguistiche Libretto esami idoneità livello}
 
 \begin{failurebox}
 The baseline matched pages mentioning English levels or course language requirements, but these sources did not address whether an external certificate could be recognised for the student's academic record.
@@ -53,7 +59,9 @@ The rewrite contributes a missing administrative concept that a human reader inf
 
 \subsection{Scholarship Requirements}
 
-\textbf{Original query:} \emph{Quali sono i requisiti per accedere alle borse di Opera?}
+\textbf{Original query:} \emph{Quali sono i requisiti per accedere alle borse di Opera?}\\
+\textbf{Cleaned query:} \emph{quali requisiti accedere borse di Opera}\\
+\textbf{Augmentation:} \emph{requisiti richiesti idoneità merito benefici}
 
 \begin{failurebox}
 The original query retrieved scholarship-related material, but generic question syntax and broad domain overlap also allowed incomplete FAQs or neighbouring intents to compete. A longer augmentation containing terms about applications, rankings, deadlines, taxes, and calls broadened the intent too far.
