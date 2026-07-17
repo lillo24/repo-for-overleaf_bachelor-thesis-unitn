@@ -86,6 +86,19 @@ These metrics require particular caution in the polished corpus. That corpus was
 
 The noisy corpus has slightly higher mean ExtraCoverage@3 than the polished corpus, 57.1\% versus 55.3\%. This does not imply better retrieval. The denominator contains only answerable cases, which are fewer under noise. Moreover, mean gain per answerable case and gain when present are lower in the noisy corpus. ExtraCoverage@3 must therefore be read together with Hit@3 and the two gain measures, not in isolation.
 
+The gain measures are important for the downstream RAG motivation. Once one useful hit makes a query answerable, additional relevant or partially relevant segments can provide complementary rules, procedures, or corroborating evidence in the same context window. Mean gain per answerable case rises from 0.289 to 0.522 in the polished corpus and from 0.300 to 0.489 in the noisy corpus when comparing the original baseline with the mean rewritten condition. Gain when present rises from 0.688 to 0.947 and from 0.643 to 0.861, respectively. This does not directly prove better generated answers, but it gives a hypothetical RAG a richer evidence set from which to construct a complete grounded response.
+
+\begin{figure}[htbp]
+\centering
+\fbox{\begin{minipage}{0.88\linewidth}
+\centering
+\textbf{Plot placeholder: additional evidence gain.}\\[0.4em]
+Planned plot: original baseline versus mean rewritten Gain/Answerable and Gain-When-Present for the polished and noisy corpora.
+\end{minipage}}
+\caption{Additional useful evidence available after the first useful hit, as a proxy for the richness of the context supplied to a downstream RAG system.}
+\label{fig:extra-context-gain}
+\end{figure}
+
 \input{qualitative_case_analysis}
 
 \section{Discussion and Error Analysis}
