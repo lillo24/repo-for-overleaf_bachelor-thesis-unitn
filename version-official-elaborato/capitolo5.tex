@@ -6,12 +6,49 @@ The final evaluation contains 26 questions, two corpus conditions, and four quer
 
 \begin{table}[htbp]
 \centering
-\fbox{\begin{minipage}{0.90\linewidth}
-\centering
-\textbf{Placeholder for the consolidated results table.}\\[0.4em]
-This box will be replaced by the final table containing the original baseline and the three rewrite runs for the polished and noisy corpora, with strict and lenient Hit@1, Hit@3, MRR, and the secondary extra-context metrics.
-\end{minipage}}
-\caption{Consolidated retrieval results across query and corpus conditions.}
+\small
+\setlength{\tabcolsep}{4.5pt}
+\textbf{(a) Main ranking metrics}\\[0.35em]
+\begin{tabular}{@{}llrrrrrr@{}}
+\toprule
+\textbf{Corpus} & \textbf{Condition} & \multicolumn{3}{c}{\textbf{Strict}} & \multicolumn{3}{c}{\textbf{Lenient}} \\
+\cmidrule(lr){3-5}\cmidrule(l){6-8}
+& & \textbf{Hit@1} & \textbf{Hit@3} & \textbf{MRR} & \textbf{Hit@1} & \textbf{Hit@3} & \textbf{MRR} \\
+\midrule
+Polished & Original & 15.4\% & 50.0\% & 0.288 & 42.3\% & 73.1\% & 0.551 \\
+& Rewrite 1 & 38.5\% & 69.2\% & 0.532 & 69.2\% & 88.5\% & 0.788 \\
+& Rewrite 2 & 30.8\% & 73.1\% & 0.494 & 65.4\% & 84.6\% & 0.744 \\
+& Rewrite 3 & 34.6\% & 61.5\% & 0.474 & 61.5\% & 84.6\% & 0.731 \\
+& \emph{Rewrite mean} & \emph{34.6\%} & \emph{67.9\%} & \emph{0.500} & \emph{65.4\%} & \emph{85.9\%} & \emph{0.754} \\
+\midrule
+Noisy & Original & 3.8\% & 26.9\% & 0.128 & 34.6\% & 57.7\% & 0.442 \\
+& Rewrite 1 & 26.9\% & 61.5\% & 0.436 & 61.5\% & 80.8\% & 0.705 \\
+& Rewrite 2 & 19.2\% & 50.0\% & 0.321 & 50.0\% & 73.1\% & 0.596 \\
+& Rewrite 3 & 23.1\% & 46.2\% & 0.340 & 46.2\% & 73.1\% & 0.590 \\
+& \emph{Rewrite mean} & \emph{23.1\%} & \emph{52.6\%} & \emph{0.365} & \emph{52.6\%} & \emph{75.6\%} & \emph{0.630} \\
+\bottomrule
+\end{tabular}
+
+\vspace{0.8em}
+\textbf{(b) Additional-context metrics at $k=3$}\\[0.35em]
+\begin{tabular}{@{}llrrr@{}}
+\toprule
+\textbf{Corpus} & \textbf{Condition} & \textbf{ExtraCoverage@3} & \textbf{Gain/Answerable} & \textbf{Gain when present} \\
+\midrule
+Polished & Original & 42.1\% & 0.289 & 0.688 \\
+& Rewrite 1 & 52.2\% & 0.522 & 1.000 \\
+& Rewrite 2 & 59.1\% & 0.545 & 0.923 \\
+& Rewrite 3 & 54.5\% & 0.500 & 0.917 \\
+& \emph{Rewrite mean} & \emph{55.3\%} & \emph{0.522} & \emph{0.947} \\
+\midrule
+Noisy & Original & 46.7\% & 0.300 & 0.643 \\
+& Rewrite 1 & 71.4\% & 0.571 & 0.800 \\
+& Rewrite 2 & 47.4\% & 0.395 & 0.833 \\
+& Rewrite 3 & 52.6\% & 0.500 & 0.950 \\
+& \emph{Rewrite mean} & \emph{57.1\%} & \emph{0.489} & \emph{0.861} \\
+\bottomrule
+\end{tabular}
+\caption{Consolidated retrieval results across query and corpus conditions. Hit and coverage values are percentages; MRR and gain values are unitless. Mean rows average the three frozen rewrite sets.}
 \label{tab:results-consolidated}
 \end{table}
 
