@@ -23,15 +23,11 @@ Across all three rewrite sets, every main aggregate metric improves over the cor
 
 The same direction appears under the lenient interpretation. Mean gains are 23.1 points for Hit@1, 12.8 points for Hit@3, and 0.203 MRR in the polished corpus; in the noisy corpus they are 17.9 points, 17.9 points, and 0.188 MRR. The improvement is therefore not limited to a single relevance threshold or one favourable rewrite generation.
 
-Figure~\ref{fig:rewrite-effect-main-metrics} will visualise the original baseline against the mean and range of the three rewrite runs. The most important reading is not that every query improves, but that all six aggregate ranking measures move in the same favourable direction in both corpus environments.
+Figure~\ref{fig:rewrite-effect-main-metrics} visualises the original baseline against the mean and range of the three rewrite runs. The most important reading is not that every query improves, but that all six aggregate ranking measures move in the same favourable direction in both corpus environments.
 
 \begin{figure}[htbp]
 \centering
-\fbox{\begin{minipage}{0.88\linewidth}
-\centering
-\textbf{Plot placeholder: effect of query rewriting.}\\[0.4em]
-Planned plot: grouped points or bars for original versus mean rewritten performance, separated by polished/noisy corpus and strict/lenient policy. Error bars or range markers show the minimum and maximum across the three rewrite sets.
-\end{minipage}}
+\includegraphics[width=0.96\textwidth]{figures/rewrite_effect_main_metrics.pdf}
 \caption{Effect of query rewriting on Hit@1, Hit@3, and MRR in the polished and noisy corpora.}
 \label{fig:rewrite-effect-main-metrics}
 \end{figure}
@@ -44,15 +40,11 @@ The three rewrite sets produce the same overall conclusion, but not identical ra
 
 Case-level agreement supports the same interpretation. Under the strict policy, all three rewrites produce the same improved/same/worsened outcome for 19 of 26 polished cases and 18 of 26 noisy cases. Under the lenient policy, agreement rises to 24 of 26 polished cases and 21 of 26 noisy cases. No case is unanimously worsened under the strict policy.
 
-Figure~\ref{fig:rewrite-stability} will show the three rewrite runs separately. The cleanest stability result is the polished lenient condition: most questions either improve or remain unchanged across all three generations. The noisy corpus is less stable because more competing documents can react differently to small changes in augmentation terms.
+Figure~\ref{fig:rewrite-stability} shows the three rewrite runs separately. The cleanest stability result is the polished lenient condition: most questions either improve or remain unchanged across all three generations. The noisy corpus is less stable because more competing documents can react differently to small changes in augmentation terms.
 
 \begin{figure}[htbp]
 \centering
-\fbox{\begin{minipage}{0.88\linewidth}
-\centering
-\textbf{Plot placeholder: rewrite stability.}\\[0.4em]
-Planned plot: one point per frozen rewrite set for each main metric, with polished and noisy corpora shown side by side. A companion annotation reports all-three case-outcome agreement under strict and lenient policies.
-\end{minipage}}
+\includegraphics[width=0.96\textwidth]{figures/rewrite_stability.pdf}
 \caption{Variation across the three independently generated frozen rewrite sets.}
 \label{fig:rewrite-stability}
 \end{figure}
@@ -65,15 +57,11 @@ Corpus noise has a substantial negative effect on absolute retrieval quality. Av
 
 The original-query baseline is also strongly affected by noise. In strict Hit@3, the polished baseline exceeds the noisy baseline by 23.1 percentage points. After rewriting, the mean gap falls to 15.4 points. This suggests that rewriting partially mitigates lexical competition, but does not eliminate the importance of corpus curation and retrieval-side controls.
 
-Figure~\ref{fig:corpus-noise-effect} will compare the same original and frozen rewritten queries across the two source sets. Since query text and BM25 configuration are held fixed, the remaining difference is attributable to the corpus view and the additional documents competing for the top-three positions.
+Figure~\ref{fig:corpus-noise-effect} compares the same original and frozen rewritten queries across the two source sets. Since query text and BM25 configuration are held fixed, the remaining difference is attributable to the corpus view and the additional documents competing for the top-three positions.
 
-\begin{figure}[htbp]
+\begin{figure}[p]
 \centering
-\fbox{\begin{minipage}{0.88\linewidth}
-\centering
-\textbf{Plot placeholder: effect of corpus noise.}\\[0.4em]
-Planned plot: paired polished/noisy values for the original baseline and each of the three rewrite sets. Lines connect identical query conditions across corpora, making the performance loss under noise directly visible.
-\end{minipage}}
+\includegraphics[width=0.96\textwidth,height=0.82\textheight,keepaspectratio]{figures/corpus_noise_effect.pdf}
 \caption{Effect of corpus noise when identical original and frozen rewritten queries are applied to both corpus views.}
 \label{fig:corpus-noise-effect}
 \end{figure}
@@ -90,11 +78,7 @@ The gain measures are important for the downstream RAG motivation. Once one usef
 
 \begin{figure}[htbp]
 \centering
-\fbox{\begin{minipage}{0.88\linewidth}
-\centering
-\textbf{Plot placeholder: additional evidence gain.}\\[0.4em]
-Planned plot: original baseline versus mean rewritten Gain/Answerable and Gain-When-Present for the polished and noisy corpora.
-\end{minipage}}
+\includegraphics[width=0.96\textwidth]{figures/extra_context_gain.pdf}
 \caption{Additional useful evidence available after the first useful hit, as a proxy for the richness of the context supplied to a downstream RAG system.}
 \label{fig:extra-context-gain}
 \end{figure}
